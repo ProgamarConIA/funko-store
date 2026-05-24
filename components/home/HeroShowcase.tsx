@@ -5,7 +5,7 @@ import { useState } from 'react'
 
 const HERO_FIGURES = [
   {
-    src: 'https://images.funko.com/catalog/category/23/45534_SWMando_BabyYoda_GLAM.jpg',
+    src: 'https://cconnect.s3.amazonaws.com/wp-content/uploads/2020/03/Funko-Pop-Star-Wars-Figures-Funko-Pop-The-Mandalorian-Star-Wars-Figures-368-The-Child-Baby-Yoda.jpg',
     alt: 'Baby Yoda Funko Pop',
     rotate: '-rotate-6',
     z: 'z-10',
@@ -13,15 +13,15 @@ const HERO_FIGURES = [
     shadow: 'shadow-[0_20px_60px_rgba(88,86,214,0.25)]',
   },
   {
-    src: 'https://images.funko.com/catalog/category/35/46979_Marvel_Deadpool_WithChimichanga_GLAM.jpg',
-    alt: 'Deadpool Funko Pop',
+    src: 'https://cconnect.s3.amazonaws.com/wp-content/uploads/2018/03/Funko-Pop-Avengers-Infinity-War-289-Thanos.jpg',
+    alt: 'Thanos Funko Pop',
     rotate: 'rotate-3',
     z: 'z-20',
     translate: 'translate-y-2',
     shadow: 'shadow-[0_24px_70px_rgba(88,86,214,0.30)]',
   },
   {
-    src: 'https://images.funko.com/catalog/category/35/72725_SpidermanNoWayHome_SpiderManBlack-Gold_GLAM.jpg',
+    src: 'https://cconnect.s3.amazonaws.com/wp-content/uploads/2016/12/Funko-Pop-Spider-Man-03-Spider-Man.jpg',
     alt: 'Spider-Man Funko Pop',
     rotate: 'rotate-6',
     z: 'z-10',
