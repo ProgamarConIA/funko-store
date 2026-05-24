@@ -3,9 +3,8 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { formatPrice, DEFAULT_PRODUCT_IMAGE } from '@/lib/utils'
 import type { Product } from '@/lib/types'
-import Badge from '@/components/ui/Badge'
 import AddToCartButton from './AddToCartButton'
-import { Package, Star, ArrowLeft, Zap } from 'lucide-react'
+import { Package, Star, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
@@ -45,89 +44,85 @@ export default async function ProductPage({ params }: PageProps) {
   const outOfStock = product.stock === 0
 
   return (
-    <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-[#F5F5F7]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-[#64607a] mb-8">
-          <Link href="/" className="hover:text-[#a855f7] flex items-center gap-1 transition-colors">
+        <div className="flex items-center gap-2 text-sm text-[#6E6E73] mb-8">
+          <Link href="/" className="hover:text-[#1D1D1F] flex items-center gap-1.5 transition-colors font-medium">
             <ArrowLeft className="w-3.5 h-3.5" /> Catálogo
           </Link>
-          <span>/</span>
-          <span className="text-[#a09dbd]">{product.franchise}</span>
-          <span>/</span>
-          <span className="text-[#f1f0ff] truncate max-w-[200px]">{product.name}</span>
+          <span className="text-[#AEAEB2]">/</span>
+          <span className="text-[#6E6E73]">{product.franchise}</span>
+          <span className="text-[#AEAEB2]">/</span>
+          <span className="text-[#1D1D1F] font-medium truncate max-w-[180px]">{product.name}</span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+
           {/* Imagen */}
-          <div className="relative">
-            <div className="sticky top-24">
-              <div className="relative aspect-square bg-gradient-to-b from-[#1a1a2e] to-[#12121f] rounded-2xl border border-[#1e1e35] overflow-hidden">
-                <Image
-                  src={product.image_url || DEFAULT_PRODUCT_IMAGE}
-                  alt={product.name}
-                  fill
-                  className="object-contain p-8"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  priority
-                />
-                {product.is_featured && (
-                  <div className="absolute top-4 left-4">
-                    <span className="flex items-center gap-1 px-3 py-1 bg-[#facc15]/15 border border-[#facc15]/40 text-[#facc15] text-xs font-bold rounded-full">
-                      <Star className="w-3 h-3 fill-current" /> Destacado
-                    </span>
-                  </div>
-                )}
-                {/* Glow decorativo */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#a855f7]/5 via-transparent to-transparent pointer-events-none" />
-              </div>
+          <div className="sticky top-24">
+            <div className="relative aspect-square bg-white rounded-3xl border border-[#E5E5EA] overflow-hidden">
+              <Image
+                src={product.image_url || DEFAULT_PRODUCT_IMAGE}
+                alt={product.name}
+                fill
+                className="object-contain p-10"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                priority
+              />
+              {product.is_featured && (
+                <div className="absolute top-4 left-4">
+                  <span className="flex items-center gap-1 px-3 py-1 bg-[#1D1D1F] text-white text-[10px] font-semibold rounded-full tracking-wide">
+                    <Star className="w-2.5 h-2.5 fill-current" /> DESTACADO
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Info */}
-          <div className="flex flex-col gap-6">
-            {/* Franquicia y badges */}
+          <div className="flex flex-col gap-7">
+
+            {/* Franquicia y nombre */}
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <Badge variant="purple">{product.franchise}</Badge>
-                <Badge variant="cyan">{product.category}</Badge>
-                {outOfStock && <Badge variant="red">Sin stock</Badge>}
-              </div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-[#f1f0ff] leading-tight mb-2">
+              <p className="text-xs font-semibold text-[#6E6E73] uppercase tracking-widest mb-2">{product.franchise}</p>
+              <h1 className="text-3xl sm:text-4xl font-bold text-[#1D1D1F] leading-tight mb-2">
                 {product.name}
               </h1>
-              <p className="text-[#64607a] text-sm">Personaje: <span className="text-[#a09dbd]">{product.character}</span></p>
+              <p className="text-sm text-[#6E6E73]">Personaje: <span className="text-[#1D1D1F] font-medium">{product.character}</span></p>
             </div>
 
             {/* Precio */}
-            <div className="flex items-end gap-3">
-              <span className="text-4xl font-extrabold text-[#f1f0ff]">
+            <div className="py-5 border-y border-[#E5E5EA]">
+              <p className="text-xs text-[#6E6E73] mb-1">Precio</p>
+              <span className="text-4xl font-bold text-[#1D1D1F]">
                 {formatPrice(product.price)}
               </span>
             </div>
 
             {/* Stock */}
-            <div className="flex items-center gap-2">
+            <div>
               {outOfStock ? (
-                <span className="flex items-center gap-1.5 text-red-400 text-sm">
+                <span className="flex items-center gap-2 text-red-500 text-sm font-medium">
                   <span className="w-2 h-2 bg-red-400 rounded-full" /> Sin stock disponible
                 </span>
               ) : product.stock <= 5 ? (
-                <span className="flex items-center gap-1.5 text-[#facc15] text-sm">
+                <span className="flex items-center gap-2 text-amber-600 text-sm font-medium">
                   <Package className="w-4 h-4" /> ¡Solo {product.stock} unidades restantes!
                 </span>
               ) : (
-                <span className="flex items-center gap-1.5 text-[#4ade80] text-sm">
-                  <span className="w-2 h-2 bg-[#4ade80] rounded-full" /> En stock ({product.stock} disponibles)
+                <span className="flex items-center gap-2 text-green-600 text-sm font-medium">
+                  <span className="w-2 h-2 bg-green-500 rounded-full" /> En stock
                 </span>
               )}
             </div>
 
             {/* Descripción */}
             {product.description && (
-              <div className="bg-[#12121f] border border-[#1e1e35] rounded-xl p-4">
-                <p className="text-[#a09dbd] text-sm leading-relaxed">{product.description}</p>
-              </div>
+              <p className="text-[#6E6E73] text-sm leading-relaxed">
+                {product.description}
+              </p>
             )}
 
             {/* Características */}
@@ -138,24 +133,24 @@ export default async function ProductPage({ params }: PageProps) {
                 { label: 'Categoría', value: product.category },
                 { label: 'SKU', value: product.id.slice(0, 8).toUpperCase() },
               ].map(({ label, value }) => (
-                <div key={label} className="bg-[#12121f] border border-[#1e1e35] rounded-xl p-3">
-                  <p className="text-xs text-[#64607a] mb-1">{label}</p>
-                  <p className="text-sm font-semibold text-[#f1f0ff]">{value}</p>
+                <div key={label} className="bg-white border border-[#E5E5EA] rounded-2xl p-4">
+                  <p className="text-xs text-[#AEAEB2] mb-1 font-medium">{label}</p>
+                  <p className="text-sm font-semibold text-[#1D1D1F]">{value}</p>
                 </div>
               ))}
             </div>
 
-            {/* Botón agregar al carrito */}
+            {/* Botón */}
             <AddToCartButton product={product} />
 
             {/* Garantías */}
-            <div className="flex flex-wrap gap-4 pt-2">
+            <div className="flex flex-wrap gap-5 pt-1">
               {[
                 { icon: '🚚', text: 'Envío a todo el país' },
                 { icon: '🔒', text: 'Pago seguro' },
                 { icon: '↩️', text: 'Devolución en 30 días' },
               ].map(({ icon, text }) => (
-                <div key={text} className="flex items-center gap-2 text-xs text-[#64607a]">
+                <div key={text} className="flex items-center gap-1.5 text-xs text-[#6E6E73]">
                   <span>{icon}</span> {text}
                 </div>
               ))}
@@ -165,19 +160,16 @@ export default async function ProductPage({ params }: PageProps) {
 
         {/* Productos relacionados */}
         {related && related.length > 0 && (
-          <div className="mt-16">
-            <div className="flex items-center gap-2 mb-6">
-              <Zap className="w-5 h-5 text-[#a855f7]" />
-              <h2 className="text-xl font-bold text-[#f1f0ff]">
-                Más de <span className="text-neon">{product.franchise}</span>
-              </h2>
-            </div>
+          <div className="mt-20">
+            <h2 className="text-xl font-bold text-[#1D1D1F] mb-6">
+              Más de {product.franchise}
+            </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {related.map((p: Product) => (
                 <Link
                   key={p.id}
                   href={`/product/${p.id}`}
-                  className="group bg-[#12121f] border border-[#1e1e35] rounded-xl p-3 hover:border-[#a855f7]/40 transition-all"
+                  className="group bg-white border border-[#E5E5EA] rounded-2xl p-4 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] transition-all"
                 >
                   <div className="relative h-32 mb-3">
                     <Image
@@ -188,10 +180,10 @@ export default async function ProductPage({ params }: PageProps) {
                       sizes="200px"
                     />
                   </div>
-                  <p className="text-xs font-semibold text-[#f1f0ff] line-clamp-2 group-hover:text-[#c084fc] transition-colors">
+                  <p className="text-xs font-semibold text-[#1D1D1F] line-clamp-2 group-hover:text-[#3D3D3F] transition-colors">
                     {p.name}
                   </p>
-                  <p className="text-sm font-bold text-[#a855f7] mt-1">{formatPrice(p.price)}</p>
+                  <p className="text-sm font-bold text-[#1D1D1F] mt-1.5">{formatPrice(p.price)}</p>
                 </Link>
               ))}
             </div>

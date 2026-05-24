@@ -5,7 +5,7 @@ import ProductFilters from '@/components/products/ProductFilters'
 import SearchBar from '@/components/products/SearchBar'
 import { PageLoader } from '@/components/ui/Spinner'
 import type { Product, ProductFilters as Filters } from '@/lib/types'
-import { Zap, Package } from 'lucide-react'
+import { Package } from 'lucide-react'
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | undefined }>
@@ -51,27 +51,26 @@ export default async function HomePage({ searchParams }: PageProps) {
   const hasFilters = !!(filters.search || filters.franchise || filters.category)
 
   return (
-    <div className="min-h-screen bg-grid">
+    <div className="min-h-screen bg-[#F5F5F7]">
+
       {/* Hero */}
-      <section className="relative px-4 py-16 text-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#a855f7]/5 via-transparent to-transparent" />
-        <div className="relative max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#a855f7]/10 border border-[#a855f7]/30 rounded-full text-[#c084fc] text-sm font-medium mb-6">
-            <Zap className="w-3.5 h-3.5" />
-            ¡Nuevos Funko Pops cada semana!
-          </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-4">
-            Tu colección de{' '}
-            <span className="text-neon">Funko Pops</span>
+      <section className="bg-white border-b border-[#E5E5EA] px-4 py-16 text-center">
+        <div className="max-w-2xl mx-auto">
+          <p className="text-xs font-semibold text-[#6E6E73] uppercase tracking-widest mb-4">
+            Coleccionables originales
+          </p>
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-[#1D1D1F] mb-4 leading-[1.1]">
+            Tu colección de<br />Funko Pops.
           </h1>
-          <p className="text-[#a09dbd] text-lg max-w-xl mx-auto">
-            Más de {products.length}+ figuras de Marvel, DC, Disney, Anime y mucho más.
+          <p className="text-[#6E6E73] text-lg">
+            Más de {products.length} figuras de Marvel, DC, Disney, Anime y más.
           </p>
         </div>
       </section>
 
-      {/* Contenido principal */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      {/* Contenido */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
         {/* Buscador */}
         <div className="mb-6">
           <Suspense fallback={null}>
@@ -80,49 +79,46 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Sidebar filtros */}
-          <aside className="lg:w-64 flex-shrink-0">
+
+          {/* Sidebar */}
+          <aside className="lg:w-60 flex-shrink-0">
             <Suspense fallback={null}>
               <ProductFilters />
             </Suspense>
           </aside>
 
-          {/* Grid de productos */}
+          {/* Grid */}
           <div className="flex-1">
-            {/* Encabezado del grid */}
             <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2">
-                <Package className="w-4 h-4 text-[#a855f7]" />
-                <span className="text-[#a09dbd] text-sm">
-                  {products.length === 0
-                    ? 'Sin resultados'
-                    : `${products.length} producto${products.length !== 1 ? 's' : ''} encontrado${products.length !== 1 ? 's' : ''}`}
-                </span>
-              </div>
+              <span className="text-sm text-[#6E6E73]">
+                {products.length === 0
+                  ? 'Sin resultados'
+                  : `${products.length} producto${products.length !== 1 ? 's' : ''}`}
+              </span>
               {hasFilters && (
-                <a href="/" className="text-xs text-[#a855f7] hover:text-[#c084fc] transition-colors">
-                  Ver todos →
+                <a href="/" className="text-xs text-[#6E6E73] hover:text-[#1D1D1F] transition-colors underline underline-offset-2">
+                  Ver todos
                 </a>
               )}
             </div>
 
             {products.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-center">
-                <div className="w-20 h-20 bg-[#12121f] border border-[#1e1e35] rounded-full flex items-center justify-center mb-4">
-                  <Package className="w-10 h-10 text-[#64607a]" />
+                <div className="w-16 h-16 bg-white border border-[#E5E5EA] rounded-full flex items-center justify-center mb-4">
+                  <Package className="w-8 h-8 text-[#AEAEB2]" />
                 </div>
-                <h3 className="text-[#f1f0ff] font-bold text-xl mb-2">No hay productos</h3>
-                <p className="text-[#64607a] text-sm max-w-xs">
+                <h3 className="text-[#1D1D1F] font-semibold text-lg mb-2">Sin resultados</h3>
+                <p className="text-[#6E6E73] text-sm max-w-xs">
                   {hasFilters
-                    ? 'Ningún Funko Pop coincide con los filtros actuales. Prueba con otros.'
-                    : 'Aún no hay productos cargados. Vuelve pronto.'}
+                    ? 'Ningún producto coincide con los filtros. Probá con otros.'
+                    : 'Aún no hay productos cargados. Volvé pronto.'}
                 </p>
               </div>
             ) : (
               <Suspense fallback={<PageLoader />}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
                   {products.map((product, i) => (
-                    <div key={product.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 40}ms` }}>
+                    <div key={product.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 30}ms` }}>
                       <ProductCard product={product} />
                     </div>
                   ))}

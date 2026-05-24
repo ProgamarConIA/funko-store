@@ -8,8 +8,8 @@ const FRANCHISES = ['Marvel', 'DC', 'Disney', 'Anime', 'Star Wars', 'Harry Potte
 const CATEGORIES = ['Standard', 'Deluxe', 'Chase', 'Exclusive', 'Super Sized']
 const SORT_OPTIONS = [
   { value: 'newest',     label: 'Más nuevos' },
-  { value: 'price_asc',  label: 'Precio: menor a mayor' },
-  { value: 'price_desc', label: 'Precio: mayor a menor' },
+  { value: 'price_asc',  label: 'Menor precio' },
+  { value: 'price_desc', label: 'Mayor precio' },
   { value: 'name_asc',   label: 'Nombre A–Z' },
 ]
 
@@ -39,33 +39,33 @@ export default function ProductFilters() {
   const hasFilters = current.franchise || current.category || current.min_price || current.max_price
 
   return (
-    <div className="bg-[#12121f] border border-[#1e1e35] rounded-2xl overflow-hidden">
+    <div className="bg-white border border-[#E5E5EA] rounded-2xl overflow-hidden">
       {/* Header */}
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#1a1a2e] transition-colors"
+        className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F5F5F7] transition-colors"
       >
-        <div className="flex items-center gap-2 text-[#f1f0ff] font-semibold">
-          <SlidersHorizontal className="w-4 h-4 text-[#a855f7]" />
+        <div className="flex items-center gap-2 text-[#1D1D1F] font-semibold text-sm">
+          <SlidersHorizontal className="w-4 h-4 text-[#6E6E73]" />
           Filtros
           {hasFilters && (
-            <span className="w-2 h-2 bg-[#a855f7] rounded-full shadow-[0_0_6px_rgba(168,85,247,0.6)]" />
+            <span className="w-1.5 h-1.5 bg-[#1D1D1F] rounded-full" />
           )}
         </div>
-        <span className="text-[#64607a] text-xs">{open ? '▲' : '▼'}</span>
+        <span className="text-[#AEAEB2] text-xs">{open ? '▲' : '▼'}</span>
       </button>
 
       {/* Filtros */}
       <div className={`${open ? 'block' : 'hidden'} lg:block`}>
-        <div className="px-5 pb-5 space-y-5 border-t border-[#1e1e35] pt-4">
+        <div className="px-5 pb-5 space-y-5 border-t border-[#E5E5EA] pt-4">
 
           {/* Ordenar */}
           <div>
-            <p className="text-xs font-semibold text-[#a09dbd] uppercase tracking-wider mb-2">Ordenar por</p>
+            <p className="text-xs font-semibold text-[#AEAEB2] uppercase tracking-wider mb-2.5">Ordenar</p>
             <select
               value={current.sort}
               onChange={(e) => update('sort', e.target.value)}
-              className="w-full bg-[#1a1a2e] border border-[#1e1e35] text-[#f1f0ff] text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#a855f7]"
+              className="w-full bg-[#F5F5F7] border border-[#E5E5EA] text-[#1D1D1F] text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#1D1D1F] transition-colors"
             >
               {SORT_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -75,16 +75,16 @@ export default function ProductFilters() {
 
           {/* Franquicia */}
           <div>
-            <p className="text-xs font-semibold text-[#a09dbd] uppercase tracking-wider mb-2">Franquicia</p>
-            <div className="flex flex-wrap gap-2">
+            <p className="text-xs font-semibold text-[#AEAEB2] uppercase tracking-wider mb-2.5">Franquicia</p>
+            <div className="flex flex-wrap gap-1.5">
               {FRANCHISES.map((f) => (
                 <button
                   key={f}
                   onClick={() => update('franchise', current.franchise === f ? '' : f)}
                   className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
                     current.franchise === f
-                      ? 'bg-[#a855f7]/20 border-[#a855f7] text-[#c084fc]'
-                      : 'border-[#1e1e35] text-[#64607a] hover:border-[#a855f7]/40 hover:text-[#a09dbd]'
+                      ? 'bg-[#1D1D1F] border-[#1D1D1F] text-white'
+                      : 'border-[#E5E5EA] text-[#6E6E73] hover:border-[#1D1D1F] hover:text-[#1D1D1F] bg-white'
                   }`}
                 >
                   {f}
@@ -95,16 +95,16 @@ export default function ProductFilters() {
 
           {/* Categoría */}
           <div>
-            <p className="text-xs font-semibold text-[#a09dbd] uppercase tracking-wider mb-2">Categoría</p>
-            <div className="flex flex-wrap gap-2">
+            <p className="text-xs font-semibold text-[#AEAEB2] uppercase tracking-wider mb-2.5">Categoría</p>
+            <div className="flex flex-wrap gap-1.5">
               {CATEGORIES.map((c) => (
                 <button
                   key={c}
                   onClick={() => update('category', current.category === c ? '' : c)}
                   className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
                     current.category === c
-                      ? 'bg-[#22d3ee]/20 border-[#22d3ee] text-[#22d3ee]'
-                      : 'border-[#1e1e35] text-[#64607a] hover:border-[#22d3ee]/40 hover:text-[#a09dbd]'
+                      ? 'bg-[#1D1D1F] border-[#1D1D1F] text-white'
+                      : 'border-[#E5E5EA] text-[#6E6E73] hover:border-[#1D1D1F] hover:text-[#1D1D1F] bg-white'
                   }`}
                 >
                   {c}
@@ -115,22 +115,22 @@ export default function ProductFilters() {
 
           {/* Precio */}
           <div>
-            <p className="text-xs font-semibold text-[#a09dbd] uppercase tracking-wider mb-2">Precio (USD)</p>
+            <p className="text-xs font-semibold text-[#AEAEB2] uppercase tracking-wider mb-2.5">Precio (ARS)</p>
             <div className="flex items-center gap-2">
               <input
                 type="number"
-                placeholder="Min"
+                placeholder="Mín"
                 value={current.min_price}
                 onChange={(e) => update('min_price', e.target.value)}
-                className="w-full bg-[#1a1a2e] border border-[#1e1e35] text-[#f1f0ff] text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#a855f7] placeholder-[#64607a]"
+                className="w-full bg-[#F5F5F7] border border-[#E5E5EA] text-[#1D1D1F] text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-[#1D1D1F] placeholder-[#AEAEB2] transition-colors"
               />
-              <span className="text-[#64607a]">–</span>
+              <span className="text-[#AEAEB2] text-xs shrink-0">–</span>
               <input
                 type="number"
-                placeholder="Max"
+                placeholder="Máx"
                 value={current.max_price}
                 onChange={(e) => update('max_price', e.target.value)}
-                className="w-full bg-[#1a1a2e] border border-[#1e1e35] text-[#f1f0ff] text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#a855f7] placeholder-[#64607a]"
+                className="w-full bg-[#F5F5F7] border border-[#E5E5EA] text-[#1D1D1F] text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-[#1D1D1F] placeholder-[#AEAEB2] transition-colors"
               />
             </div>
           </div>
@@ -139,7 +139,7 @@ export default function ProductFilters() {
           {hasFilters && (
             <button
               onClick={clearAll}
-              className="w-full flex items-center justify-center gap-2 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-all border border-red-500/20"
+              className="w-full flex items-center justify-center gap-2 py-2 text-sm text-[#6E6E73] hover:text-[#1D1D1F] rounded-xl transition-all border border-[#E5E5EA] hover:border-[#1D1D1F]"
             >
               <X className="w-3 h-3" /> Limpiar filtros
             </button>

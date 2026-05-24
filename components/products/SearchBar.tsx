@@ -24,7 +24,6 @@ export default function SearchBar() {
     [params, router]
   )
 
-  // Debounce de 400ms
   useEffect(() => {
     const timer = setTimeout(() => handleSearch(value), 400)
     return () => clearTimeout(timer)
@@ -32,18 +31,18 @@ export default function SearchBar() {
 
   return (
     <div className="relative">
-      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64607a]" />
+      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#AEAEB2]" />
       <input
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Buscar Funko Pop (personaje, franquicia…)"
-        className="w-full bg-[#12121f] border border-[#1e1e35] text-[#f1f0ff] placeholder-[#64607a] rounded-xl pl-11 pr-10 py-3 text-sm focus:outline-none focus:border-[#a855f7] focus:ring-2 focus:ring-[#a855f7]/20 transition-all"
+        placeholder="Buscar Funko Pop…"
+        className="w-full bg-white border border-[#E5E5EA] text-[#1D1D1F] placeholder-[#AEAEB2] rounded-xl pl-11 pr-10 py-3 text-sm focus:outline-none focus:border-[#1D1D1F] focus:ring-2 focus:ring-[#1D1D1F]/10 transition-all"
       />
       {value && (
         <button
           onClick={() => setValue('')}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64607a] hover:text-[#f1f0ff] transition-colors"
+          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#AEAEB2] hover:text-[#6E6E73] transition-colors"
         >
           <X className="w-4 h-4" />
         </button>

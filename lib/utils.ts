@@ -6,12 +6,13 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-/** Formatea precio a moneda */
-export function formatPrice(price: number, currency = 'USD'): string {
+/** Formatea precio en pesos argentinos (ARS) */
+export function formatPrice(price: number): string {
   return new Intl.NumberFormat('es-AR', {
     style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
+    currency: 'ARS',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(price)
 }
 
@@ -41,13 +42,13 @@ export function truncate(text: string, maxLength: number): string {
 /** Color de estado de orden */
 export function getOrderStatusColor(status: string): string {
   const colors: Record<string, string> = {
-    pending:   'text-neon-yellow bg-yellow-500/10 border-yellow-500/30',
-    paid:      'text-neon-cyan bg-cyan-500/10 border-cyan-500/30',
-    shipped:   'text-blue-400 bg-blue-500/10 border-blue-500/30',
-    delivered: 'text-neon-green bg-green-500/10 border-green-500/30',
-    cancelled: 'text-red-400 bg-red-500/10 border-red-500/30',
+    pending:   'text-amber-700 bg-amber-50 border-amber-200',
+    paid:      'text-blue-700 bg-blue-50 border-blue-200',
+    shipped:   'text-indigo-700 bg-indigo-50 border-indigo-200',
+    delivered: 'text-green-700 bg-green-50 border-green-200',
+    cancelled: 'text-red-600 bg-red-50 border-red-200',
   }
-  return colors[status] ?? 'text-text-secondary bg-bg-card border-bg-border'
+  return colors[status] ?? 'text-[#6E6E73] bg-[#F5F5F7] border-[#E5E5EA]'
 }
 
 /** Etiqueta legible de estado de orden */
