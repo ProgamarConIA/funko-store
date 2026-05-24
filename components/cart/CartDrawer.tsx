@@ -15,11 +15,11 @@ export default function CartDrawer() {
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 bg-[#0F0F14]/30 backdrop-blur-sm z-40" onClick={closeCart} />
+        <div className="fixed inset-0 bg-[#0F0F14]/30 z-40" onClick={closeCart} />
       )}
 
       <aside className={`fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white z-50 flex flex-col transform transition-transform duration-300 shadow-drawer ${
-        isOpen ? 'translate-x-0' : 'translate-x-full'
+        isOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none'
       }`}>
 
         {/* Header */}

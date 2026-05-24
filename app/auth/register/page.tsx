@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
@@ -10,11 +9,10 @@ import { Mail, Lock, User, CheckCircle } from 'lucide-react'
 
 export default function RegisterPage() {
   const supabase = createClient()
-  const router = useRouter()
 
-  const [form, setForm] = useState({ full_name: '', email: '', password: '', confirm: '' })
+  const [form, setForm]     = useState({ full_name: '', email: '', password: '', confirm: '' })
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError]   = useState('')
   const [success, setSuccess] = useState(false)
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -45,32 +43,50 @@ export default function RegisterPage() {
     }
   }
 
+  /* ── Pantalla de éxito ── */
   if (success) {
     return (
-      <div className="min-h-[85vh] flex items-center justify-center px-4 gradient-hero">
-        <div className="w-full max-w-md text-center space-y-5">
-          <div className="flex justify-center">
-            <div className="w-16 h-16 bg-green-50 border border-green-200 rounded-2xl flex items-center justify-center">
-              <CheckCircle className="w-8 h-8 text-green-500" />
+      <div className="min-h-[85vh] flex items-center justify-center px-4 bg-[#FAFAFA]">
+        <div className="w-full max-w-md">
+          <div className="bg-white border border-[#E4E4EC] rounded-2xl p-8 shadow-card text-center space-y-5">
+
+            {/* Icono */}
+            <div className="flex justify-center">
+              <div className="w-16 h-16 bg-green-50 border border-green-200 rounded-2xl flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-green-500" />
+              </div>
             </div>
+
+            {/* Texto */}
+            <div>
+              <h2 className="text-2xl font-bold text-[#0F0F14]">¡Cuenta creada!</h2>
+              <p className="text-[#6B6B7B] mt-2 text-sm leading-relaxed">
+                Revisá tu email{' '}
+                <span className="font-semibold text-[#0F0F14]">{form.email}</span>{' '}
+                y confirmá tu cuenta para empezar a coleccionar.
+              </p>
+            </div>
+
+            {/* CTA */}
+            <Link
+              href="/auth/login"
+              className="inline-flex items-center justify-center w-full py-3 px-6 bg-[#5856D6] hover:bg-[#4644b8] text-white font-semibold rounded-xl transition-colors"
+            >
+              Ir al login
+            </Link>
+
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-[#0F0F14]">¡Cuenta creada!</h2>
-            <p className="text-[#6B6B7B] mt-2 text-sm">
-              Revisá tu email <strong className="text-[#0F0F14]">{form.email}</strong> y confirmá tu cuenta.
-            </p>
-          </div>
-          <Link href="/auth/login" className="inline-block px-8 py-3 bg-[#0F0F14] hover:bg-[#2A2A35] text-white font-semibold rounded-xl transition-colors shadow-sm">
-            Ir al login
-          </Link>
         </div>
       </div>
     )
   }
 
+  /* ── Formulario de registro ── */
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-10 gradient-hero">
+    <div className="min-h-[85vh] flex items-center justify-center px-4 py-10 bg-[#FAFAFA]">
       <div className="w-full max-w-md">
+
+        {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-12 h-12 bg-[#EEEDFF] rounded-2xl mb-4">
             <span className="text-2xl">✨</span>
@@ -79,7 +95,11 @@ export default function RegisterPage() {
           <p className="text-[#6B6B7B] mt-1.5 text-sm">Únete a miles de coleccionistas</p>
         </div>
 
-        <form onSubmit={handleRegister} className="bg-white border border-[#E4E4EC] rounded-2xl p-6 space-y-4 shadow-card">
+        {/* Form */}
+        <form
+          onSubmit={handleRegister}
+          className="bg-white border border-[#E4E4EC] rounded-2xl p-6 space-y-4 shadow-card"
+        >
           <Input
             id="full_name"
             label="Nombre completo"
@@ -126,17 +146,21 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <Button type="submit" loading={loading} className="w-full" size="lg">
+          <Button type="submit" variant="accent" loading={loading} className="w-full" size="lg">
             {loading ? 'Creando cuenta...' : 'Crear cuenta'}
           </Button>
         </form>
 
         <p className="text-center text-sm text-[#6B6B7B] mt-5">
           ¿Ya tenés cuenta?{' '}
-          <Link href="/auth/login" className="text-[#5856D6] hover:text-[#4644b8] font-semibold transition-colors">
+          <Link
+            href="/auth/login"
+            className="text-[#5856D6] hover:text-[#4644b8] font-semibold transition-colors"
+          >
             Iniciar sesión
           </Link>
         </p>
+
       </div>
     </div>
   )

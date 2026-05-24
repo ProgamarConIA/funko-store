@@ -6,7 +6,7 @@ import { useCartStore } from '@/store/cartStore'
 import type { Product } from '@/lib/types'
 
 export default function AddToCartButton({ product }: { product: Product }) {
-  const { addItem, openCart } = useCartStore()
+  const { addItem } = useCartStore()
   const [quantity, setQuantity] = useState(1)
   const [added, setAdded] = useState(false)
 
@@ -15,7 +15,6 @@ export default function AddToCartButton({ product }: { product: Product }) {
   const handleAdd = () => {
     addItem(product, quantity)
     setAdded(true)
-    openCart()
     setTimeout(() => setAdded(false), 2000)
   }
 

@@ -70,4 +70,13 @@ html, body {
 }
 .animate-slide-in { animation: slideInRight 0.28s ease-out; }
 
-a, button { transition: all 0.18s ease; }
+a, button {
+  /* Elimina el delay de 300ms de doble-tap en mobile */
+  touch-action: manipulation;
+  /* Quita el flash gris en iOS al tocar */
+  -webkit-tap-highlight-color: transparent;
+  /* Solo transiciona propiedades que realmente cambian, nunca "all" */
+  transition: color 150ms ease, background-color 150ms ease,
+              border-color 150ms ease, opacity 150ms ease,
+              box-shadow 150ms ease;
+}

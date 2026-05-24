@@ -13,15 +13,15 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { addItem, openCart } = useCartStore()
-  const [added, setAdded] = useState(false)
+  const { addItem } = useCartStore()
+  const [added, setAdded]       = useState(false)
   const [imgError, setImgError] = useState(false)
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
+    e.stopPropagation() // Impide que el click burbujee hasta el Link padre
     addItem(product)
     setAdded(true)
-    openCart()
     setTimeout(() => setAdded(false), 1500)
   }
 
@@ -29,8 +29,13 @@ export default function ProductCard({ product }: ProductCardProps) {
   const imgSrc = imgError ? DEFAULT_PRODUCT_IMAGE : (product.image_url || DEFAULT_PRODUCT_IMAGE)
 
   return (
-    <Link href={`/product/${product.id}`} className="group block h-full">
-      <div className="h-full flex flex-col bg-white rounded-2xl overflow-hidden border border-[#E4E4EC] shadow-card hover:shadow-card-lg hover:-translate-y-0.5 transition-all duration-200">
+    // El scale se aplica aquí: el card entero crece suavemente sin clipear
+    // hover:z-10 evita que el card escalado quede detrás de los vecinos
+    <Link
+      href={`/product/${product.id}`}
+      className="group relative block h-full hover:z-10 transition-transform duration-300 ease-out hover:scale-[1.03]"
+    >
+      <div className="h-full flex flex-col bg-white rounded-2xl overflow-hidden border border-[#E4E4EC] shadow-card group-hover:shadow-card-lg transition-shadow duration-300">
 
         {/* Imagen */}
         <div className="relative h-52 gradient-card-img overflow-hidden flex-shrink-0">
@@ -39,7 +44,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             alt={product.name}
             fill
             className="object-contain p-5 transition-transform duration-300 group-hover:scale-[1.06]"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            sizes="(max-width: 480px) 100vw, (max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             onError={() => setImgError(true)}
           />
 
@@ -54,7 +59,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           {/* Sin stock */}
           {outOfStock && (
-            <div className="absolute inset-0 bg-white/75 backdrop-blur-[2px] flex items-center justify-center">
+            <div className="absolute inset-0 bg-white/75 flex items-center justify-center">
               <span className="px-4 py-1.5 bg-white border border-[#E4E4EC] text-[#6B6B7B] text-xs font-semibold rounded-full shadow-sm">
                 Sin stock
               </span>
@@ -63,7 +68,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           {/* Franquicia pill */}
           <div className="absolute bottom-3 right-3">
-            <span className="px-2.5 py-1 bg-white/90 backdrop-blur-sm text-[#6B6B7B] text-[10px] font-semibold rounded-full border border-[#E4E4EC]">
+            <span className="px-2.5 py-1 bg-white/90 text-[#6B6B7B] text-[10px] font-semibold rounded-full border border-[#E4E4EC]">
               {product.franchise}
             </span>
           </div>
