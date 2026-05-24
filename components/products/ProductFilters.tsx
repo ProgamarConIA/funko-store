@@ -123,7 +123,7 @@ export default function ProductFilters() {
 
           {/* Precio */}
           <div>
-            <p className="text-[10px] font-bold text-[#B0B0BE] uppercase tracking-widest mb-2.5">Precio (ARS)</p>
+            <p className="text-[10px] font-bold text-[#B0B0BE] uppercase tracking-widest mb-2.5">Precio (EUR)</p>
             <div className="flex items-center gap-2">
               <input
                 type="number"

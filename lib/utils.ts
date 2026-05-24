@@ -6,13 +6,13 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-/** Formatea precio en pesos argentinos (ARS) */
+/** Formatea precio en euros (EUR) */
 export function formatPrice(price: number): string {
-  return new Intl.NumberFormat('es-AR', {
+  return new Intl.NumberFormat('es-ES', {
     style: 'currency',
-    currency: 'ARS',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    currency: 'EUR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(price)
 }
 
