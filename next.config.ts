@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.imgur.com" },
       { protocol: "https", hostname: "m.media-amazon.com" },
       { protocol: "https", hostname: "**.cloudinary.com" },
+      { protocol: "https", hostname: "cconnect.s3.amazonaws.com" },
     ],
   },
 };
