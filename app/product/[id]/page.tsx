@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import { formatPrice, DEFAULT_PRODUCT_IMAGE } from '@/lib/utils'
+import { formatPrice } from '@/lib/utils'
 import type { Product } from '@/lib/types'
 import AddToCartButton from './AddToCartButton'
+import ProductImage from './ProductImage'
 import { Package, Star, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
@@ -65,14 +66,7 @@ export default async function ProductPage({ params }: PageProps) {
           {/* Imagen */}
           <div className="sticky top-24">
             <div className="relative aspect-square gradient-card-img rounded-3xl border border-[#E4E4EC] overflow-hidden shadow-card">
-              <Image
-                src={product.image_url || DEFAULT_PRODUCT_IMAGE}
-                alt={product.name}
-                fill
-                className="object-contain p-10"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                priority
-              />
+              <ProductImage src={product.image_url} alt={product.name} />
               {product.is_featured && (
                 <div className="absolute top-4 left-4">
                   <span className="flex items-center gap-1 px-3 py-1 bg-[#5856D6] text-white text-[10px] font-bold rounded-full shadow-sm">
