@@ -1,9 +1,9 @@
 -- ============================================================
--- FunkoStore - Actualizar precios a ARS e imágenes reales
--- Ejecutar en el SQL Editor de Supabase
+-- FunkoStore — Precios en ARS + Imágenes reales
+-- Ejecutar en Supabase SQL Editor → New query → Run
 -- ============================================================
 
--- MARVEL
+-- ── MARVEL ──────────────────────────────────────────────────
 UPDATE products SET price = 12500,
   image_url = 'https://images.funko.com/catalog/category/35/72725_SpidermanNoWayHome_SpiderManBlack-Gold_GLAM.jpg'
 WHERE character ILIKE '%Spider%';
@@ -44,7 +44,7 @@ UPDATE products SET price = 16000,
   image_url = 'https://images.funko.com/catalog/category/35/26294_Marvel_Avengers3_Thanos_GLAM.jpg'
 WHERE character ILIKE '%Thanos%';
 
--- DC
+-- ── DC ──────────────────────────────────────────────────────
 UPDATE products SET price = 11500,
   image_url = 'https://images.funko.com/catalog/category/35/10103_DC_BatmanHush_GLAM.jpg'
 WHERE character ILIKE '%Batman%';
@@ -69,7 +69,7 @@ UPDATE products SET price = 11500,
   image_url = 'https://images.funko.com/catalog/category/35/37384_DCHeroes_TheFlash_GLAM.jpg'
 WHERE character ILIKE '%Flash%';
 
--- DISNEY
+-- ── DISNEY ──────────────────────────────────────────────────
 UPDATE products SET price = 11000,
   image_url = 'https://images.funko.com/catalog/category/25/7224_Disney_MickeyMouse_GLAM.jpg'
 WHERE character ILIKE '%Mickey%';
@@ -90,7 +90,7 @@ UPDATE products SET price = 12000,
   image_url = 'https://images.funko.com/catalog/category/25/21395_Disney_LiloandStitch_Stitch_GLAM.jpg'
 WHERE character ILIKE '%Stitch%';
 
--- STAR WARS
+-- ── STAR WARS ───────────────────────────────────────────────
 UPDATE products SET price = 13000,
   image_url = 'https://images.funko.com/catalog/category/23/7229_StarWars_DarthVader_GLAM.jpg'
 WHERE character ILIKE '%Darth Vader%';
@@ -101,13 +101,13 @@ WHERE character = 'Yoda';
 
 UPDATE products SET price = 14000,
   image_url = 'https://images.funko.com/catalog/category/23/45534_SWMando_BabyYoda_GLAM.jpg'
-WHERE character ILIKE '%Grogu%' OR character ILIKE '%Baby Yoda%';
+WHERE character ILIKE '%Grogu%' OR character ILIKE '%Baby Yoda%' OR character ILIKE '%The Child%';
 
 UPDATE products SET price = 13500,
   image_url = 'https://images.funko.com/catalog/category/23/39370_Mandalorian_GLAM.jpg'
 WHERE character ILIKE '%Mandalorian%';
 
--- ANIME
+-- ── ANIME ───────────────────────────────────────────────────
 UPDATE products SET price = 13000,
   image_url = 'https://images.funko.com/catalog/category/35/6455_animation_Naruto_naruto_GLAM.jpg'
 WHERE character = 'Naruto';
@@ -122,16 +122,16 @@ WHERE character ILIKE '%Luffy%';
 
 UPDATE products SET price = 14500,
   image_url = 'https://images.funko.com/catalog/category/35/47851_animation_Naruto_Itachi_GLAM.jpg'
-WHERE character = 'Itachi';
+WHERE character ILIKE '%Itachi%';
 
 UPDATE products SET price = 13500,
   image_url = 'https://images.funko.com/catalog/category/35/55735_animation_DemonSlayer_Tanjiro_GLAM.jpg'
 WHERE character ILIKE '%Tanjiro%';
 
--- HARRY POTTER
+-- ── HARRY POTTER ────────────────────────────────────────────
 UPDATE products SET price = 11000,
   image_url = 'https://images.funko.com/catalog/category/35/5891_HarryPotter_HarryPotter_GLAM.jpg'
-WHERE character = 'Harry Potter';
+WHERE franchise = 'Harry Potter' AND character ILIKE '%Harry%';
 
 UPDATE products SET price = 11500,
   image_url = 'https://images.funko.com/catalog/category/35/5892_HarryPotter_Hermione_GLAM.jpg'
@@ -141,7 +141,7 @@ UPDATE products SET price = 12500,
   image_url = 'https://images.funko.com/catalog/category/35/5889_HarryPotter_Dumbledore_GLAM.jpg'
 WHERE character ILIKE '%Dumbledore%';
 
--- GAMES
+-- ── JUEGOS ──────────────────────────────────────────────────
 UPDATE products SET price = 13000,
   image_url = 'https://images.funko.com/catalog/category/35/21_Games_Zelda_Link_GLAM.jpg'
 WHERE character ILIKE '%Link%';
@@ -153,3 +153,9 @@ WHERE character ILIKE '%Master Chief%';
 UPDATE products SET price = 15000,
   image_url = 'https://images.funko.com/catalog/category/35/44938_GOW_Kratos_GLAM.jpg'
 WHERE character ILIKE '%Kratos%';
+
+-- ── VERIFICACION ─────────────────────────────────────────────
+-- Confirmar que no queden precios bajos (USD)
+SELECT id, name, franchise, character, price, image_url
+FROM products
+ORDER BY franchise, price;

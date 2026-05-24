@@ -25,7 +25,7 @@ export default function LoginForm() {
     setError('')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
-      setError('Credenciales incorrectas. Verificá tu email y contraseña.')
+      setError('Email o contraseña incorrectos.')
       setLoading(false)
     } else {
       router.push(redirect)
@@ -35,7 +35,7 @@ export default function LoginForm() {
 
   return (
     <>
-      <form onSubmit={handleLogin} className="bg-[#12121f] border border-[#1e1e35] rounded-2xl p-6 space-y-4">
+      <form onSubmit={handleLogin} className="bg-white border border-[#E4E4EC] rounded-2xl p-6 space-y-4 shadow-card">
         <Input
           id="email"
           label="Email"
@@ -57,17 +57,17 @@ export default function LoginForm() {
           required
         />
         {error && (
-          <div className="px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
+          <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
             {error}
           </div>
         )}
-        <Button type="submit" loading={loading} className="w-full">
+        <Button type="submit" loading={loading} className="w-full" size="lg">
           {loading ? 'Ingresando...' : 'Iniciar sesión'}
         </Button>
       </form>
-      <p className="text-center text-sm text-[#64607a] mt-6">
+      <p className="text-center text-sm text-[#6B6B7B] mt-5">
         ¿No tenés cuenta?{' '}
-        <Link href="/auth/register" className="text-[#a855f7] hover:text-[#c084fc] font-semibold transition-colors">
+        <Link href="/auth/register" className="text-[#5856D6] hover:text-[#4644b8] font-semibold transition-colors">
           Registrarse gratis
         </Link>
       </p>
