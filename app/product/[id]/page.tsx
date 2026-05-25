@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, DEFAULT_PRODUCT_IMAGE } from '@/lib/utils'
 import type { Product } from '@/lib/types'
 import AddToCartButton from './AddToCartButton'
 import ProductImage from './ProductImage'
