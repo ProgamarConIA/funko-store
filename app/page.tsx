@@ -119,7 +119,7 @@ export default async function HomePage({ searchParams }: PageProps) {
   const activeFranchise = filters.franchise ?? ''
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#0e0e16]">
+    <div className="min-h-screen bg-[#FAFAFF] dark:bg-[#0e0e16]">
 
       {/* ── HERO ─────────────────────────────────────────────────
           Franquicia activa → banner temático
@@ -132,7 +132,7 @@ export default async function HomePage({ searchParams }: PageProps) {
           count={total}
         />
       ) : (
-        <section className="relative overflow-hidden border-b border-[#E4E4EC] dark:border-[#1e1e35] bg-white dark:bg-[#0e0e16]">
+        <section className="relative overflow-hidden border-b border-[#E0DFFA] dark:border-[#1e1e35] bg-[#F8F7FF] dark:bg-[#0e0e16]">
           <div className="absolute inset-0 gradient-hero pointer-events-none" />
 
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -203,9 +203,9 @@ export default async function HomePage({ searchParams }: PageProps) {
             )}
           </span>
           {hasFilters && (
-            <a href="/" className="text-xs text-[#5856D6] hover:text-[#4644b8] font-medium underline underline-offset-2">
+            <Link href="/" className="text-xs text-[#5856D6] hover:text-[#4644b8] font-medium underline underline-offset-2">
               Ver todos
-            </a>
+            </Link>
           )}
         </div>
 

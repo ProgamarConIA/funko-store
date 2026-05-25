@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ShoppingCart, User, Menu, X, LogOut } from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
 import { createClient } from '@/lib/supabase/client'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 const NAV_LINKS = [
@@ -30,8 +31,8 @@ export default function Navbar() {
   // Ref para evitar setState innecesarios en cada frame de scroll
   const scrolledRef = useRef(false)
 
-  // Supabase client estable (no se recrea en cada render)
-  const supabase = useRef(createClient()).current
+  // Supabase client estable: lazy initializer garantiza que se cree solo una vez
+  const [supabase] = useState<SupabaseClient>(() => createClient())
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user))
@@ -63,16 +64,16 @@ export default function Navbar() {
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,box-shadow,border-color] duration-300 ${
       scrolled
-        ? 'bg-white/90 backdrop-blur-xl border-b border-[#E4E4EC] shadow-[0_1px_12px_rgba(15,15,20,0.06)]'
-        : 'bg-white/70 backdrop-blur-md'
+        ? 'bg-white/92 dark:bg-[#0e0e16]/92 backdrop-blur-xl border-b border-[#E4E4EC] dark:border-[#1e1e35] shadow-[0_1px_12px_rgba(15,15,20,0.06)] dark:shadow-[0_1px_12px_rgba(0,0,0,.3)]'
+        : 'bg-white/70 dark:bg-[#0e0e16]/70 backdrop-blur-md'
     }`}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-1">
-            <span className="font-bold text-xl tracking-tight text-[#0F0F14]">Funko</span>
-            <span className="font-light text-xl tracking-tight text-[#5856D6]">Store</span>
+            <span className="font-bold text-xl tracking-tight text-[#0F0F14] dark:text-[#f1f0ff]">Funko</span>
+            <span className="font-light text-xl tracking-tight text-[#5856D6] dark:text-[#a88dff]">Store</span>
           </Link>
 
           {/* Links desktop */}
@@ -81,7 +82,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="px-3.5 py-2 text-sm text-[#6B6B7B] hover:text-[#0F0F14] hover:bg-[#F5F4FF] rounded-lg font-medium"
+                className="px-3.5 py-2 text-sm text-[#6B6B7B] dark:text-[#9090aa] hover:text-[#0F0F14] dark:hover:text-[#f1f0ff] hover:bg-[#F5F4FF] dark:hover:bg-[#1e1e35] rounded-lg font-medium"
               >
                 {link.label}
               </Link>
@@ -94,7 +95,7 @@ export default function Navbar() {
             {/* Carrito */}
             <button
               onClick={toggleCart}
-              className="relative p-2.5 rounded-xl text-[#6B6B7B] hover:text-[#0F0F14] hover:bg-[#F5F4FF]"
+              className="relative p-2.5 rounded-xl text-[#6B6B7B] dark:text-[#9090aa] hover:text-[#0F0F14] dark:hover:text-[#f1f0ff] hover:bg-[#F5F4FF] dark:hover:bg-[#1e1e35]"
               aria-label="Abrir carrito"
             >
               <ShoppingCart className="w-5 h-5" />
@@ -108,12 +109,12 @@ export default function Navbar() {
             {/* Usuario desktop */}
             {user ? (
               <div className="hidden md:flex items-center">
-                <Link href="/profile" className="p-2.5 rounded-xl text-[#6B6B7B] hover:text-[#0F0F14] hover:bg-[#F5F4FF]">
+                <Link href="/profile" className="p-2.5 rounded-xl text-[#6B6B7B] dark:text-[#9090aa] hover:text-[#0F0F14] dark:hover:text-[#f1f0ff] hover:bg-[#F5F4FF] dark:hover:bg-[#1e1e35]">
                   <User className="w-5 h-5" />
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="p-2.5 rounded-xl text-[#6B6B7B] hover:text-red-500 hover:bg-red-50"
+                  className="p-2.5 rounded-xl text-[#6B6B7B] dark:text-[#9090aa] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
                   title="Cerrar sesión"
                 >
                   <LogOut className="w-5 h-5" />
@@ -121,10 +122,10 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="hidden md:flex items-center gap-2 ml-1">
-                <Link href="/auth/login" className="px-4 py-2 text-sm text-[#6B6B7B] hover:text-[#0F0F14] font-medium">
+                <Link href="/auth/login" className="px-4 py-2 text-sm text-[#6B6B7B] dark:text-[#9090aa] hover:text-[#0F0F14] dark:hover:text-[#f1f0ff] font-medium">
                   Ingresar
                 </Link>
-                <Link href="/auth/register" className="px-4 py-2 text-sm bg-[#0F0F14] hover:bg-[#2A2A35] text-white font-medium rounded-xl shadow-sm">
+                <Link href="/auth/register" className="px-4 py-2 text-sm bg-[#0F0F14] dark:bg-[#5856D6] hover:bg-[#2A2A35] dark:hover:bg-[#4644b8] text-white font-medium rounded-xl shadow-sm">
                   Registrarse
                 </Link>
               </div>
@@ -133,7 +134,7 @@ export default function Navbar() {
             {/* Botón menú móvil */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden p-2.5 rounded-xl text-[#6B6B7B] hover:text-[#0F0F14] hover:bg-[#F5F4FF]"
+              className="md:hidden p-2.5 rounded-xl text-[#6B6B7B] dark:text-[#9090aa] hover:text-[#0F0F14] dark:hover:text-[#f1f0ff] hover:bg-[#F5F4FF] dark:hover:bg-[#1e1e35]"
               aria-label="Menú"
             >
               {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -143,30 +144,30 @@ export default function Navbar() {
 
         {/* Menú móvil desplegable */}
         {menuOpen && (
-          <div className="md:hidden border-t border-[#E4E4EC] py-3 space-y-0.5 animate-fade-in-up bg-white/95">
+          <div className="md:hidden border-t border-[#E4E4EC] dark:border-[#1e1e35] py-3 space-y-0.5 animate-fade-in-up bg-white/97 dark:bg-[#0e0e16]/97">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
-                className="block px-4 py-2.5 text-sm text-[#6B6B7B] hover:text-[#0F0F14] hover:bg-[#F5F4FF] rounded-xl font-medium"
+                className="block px-4 py-2.5 text-sm text-[#6B6B7B] dark:text-[#9090aa] hover:text-[#0F0F14] dark:hover:text-[#f1f0ff] hover:bg-[#F5F4FF] dark:hover:bg-[#1e1e35] rounded-xl font-medium"
               >
                 {link.label}
               </Link>
             ))}
-            <div className="border-t border-[#E4E4EC] pt-2 mt-2">
+            <div className="border-t border-[#E4E4EC] dark:border-[#1e1e35] pt-2 mt-2">
               {user ? (
                 <>
                   <Link
                     href="/profile"
                     onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-[#6B6B7B] hover:text-[#0F0F14] hover:bg-[#F5F4FF] rounded-xl font-medium"
+                    className="block px-4 py-2.5 text-sm text-[#6B6B7B] dark:text-[#9090aa] hover:text-[#0F0F14] dark:hover:text-[#f1f0ff] hover:bg-[#F5F4FF] dark:hover:bg-[#1e1e35] rounded-xl font-medium"
                   >
                     Mi perfil
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 rounded-xl font-medium"
+                    className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl font-medium"
                   >
                     Cerrar sesión
                   </button>
@@ -176,14 +177,14 @@ export default function Navbar() {
                   <Link
                     href="/auth/login"
                     onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-[#6B6B7B] hover:text-[#0F0F14] hover:bg-[#F5F4FF] rounded-xl font-medium"
+                    className="block px-4 py-2.5 text-sm text-[#6B6B7B] dark:text-[#9090aa] hover:text-[#0F0F14] dark:hover:text-[#f1f0ff] hover:bg-[#F5F4FF] dark:hover:bg-[#1e1e35] rounded-xl font-medium"
                   >
                     Ingresar
                   </Link>
                   <Link
                     href="/auth/register"
                     onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-[#0F0F14] font-semibold hover:bg-[#F5F4FF] rounded-xl"
+                    className="block px-4 py-2.5 text-sm text-[#0F0F14] dark:text-[#f1f0ff] font-semibold hover:bg-[#F5F4FF] dark:hover:bg-[#1e1e35] rounded-xl"
                   >
                     Registrarse
                   </Link>

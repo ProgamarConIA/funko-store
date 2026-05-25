@@ -2,15 +2,18 @@
 
 import { Search, X } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState, useEffect, useTransition } from 'react'
 
 export default function SearchBar() {
   const router = useRouter()
   const params = useSearchParams()
   const [value, setValue] = useState(params.get('search') ?? '')
+  const [, startTransition] = useTransition()
 
+  /* Sync URL param → input (cuando cambia por navegación externa) */
   useEffect(() => {
-    setValue(params.get('search') ?? '')
+    const urlSearch = params.get('search') ?? ''
+    startTransition(() => { setValue(urlSearch) })
   }, [params])
 
   const handleSearch = useCallback(
@@ -24,10 +27,11 @@ export default function SearchBar() {
     [params, router]
   )
 
+  /* Debounce typing → navegación */
   useEffect(() => {
     const timer = setTimeout(() => handleSearch(value), 400)
     return () => clearTimeout(timer)
-  }, [value])
+  }, [value, handleSearch])
 
   return (
     <div className="relative">
@@ -37,7 +41,15 @@ export default function SearchBar() {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Buscar Funko Pop…"
-        className="w-full bg-white border border-[#E5E5EA] text-[#1D1D1F] placeholder-[#AEAEB2] rounded-xl pl-11 pr-10 py-3 text-sm focus:outline-none focus:border-[#1D1D1F] focus:ring-2 focus:ring-[#1D1D1F]/10 transition-all"
+        className={[
+          'w-full rounded-xl pl-11 pr-10 py-3 text-sm transition-all',
+          'bg-white dark:bg-[#13131f]',
+          'border border-[#E0DFFF] dark:border-[#1e1e35]',
+          'text-[#1D1D1F] dark:text-[#f1f0ff]',
+          'placeholder-[#AEAEB2] dark:placeholder-[#4a4a6a]',
+          'focus:outline-none focus:border-[#5856D6] dark:focus:border-[#5856D6]',
+          'focus:ring-2 focus:ring-[#5856D6]/15',
+        ].join(' ')}
       />
       {value && (
         <button

@@ -63,6 +63,8 @@ export function getOrderStatusLabel(status: string): string {
   return labels[status] ?? status
 }
 
-/** Imagen por defecto si no hay imagen */
-export const DEFAULT_PRODUCT_IMAGE =
-  'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Placeholder_view_vector.svg/800px-Placeholder_view_vector.svg.png'
+/**
+ * Imagen por defecto cuando un producto no tiene imagen o falla al cargar.
+ * Usa imagen local para evitar bloqueos de CDN externos.
+ */
+export const DEFAULT_PRODUCT_IMAGE = '/images/funko-placeholder.png'

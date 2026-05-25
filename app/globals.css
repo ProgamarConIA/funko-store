@@ -24,12 +24,12 @@
 }
 
 /* ── Variables CSS para theming light/dark ──────────────────────
-   Usadas en el perfil y otros componentes que necesitan dark mode
-   garantizado sin depender del escaneo de clases de Tailwind.
+   Usadas en los componentes que necesitan dark mode garantizado
+   sin depender del escaneo de clases de Tailwind.
 ─────────────────────────────────────────────────────────────────*/
 :root {
   --surface:        #ffffff;
-  --surface-raised: #F7F7FD;
+  --surface-raised: #F6F5FF;   /* tinte violáceo suave */
   --surface-hover:  #EEEDFF;
   --border-color:   #E2E2EE;
   --text-primary:   #0A0A14;
@@ -63,7 +63,8 @@
 html, body {
   max-width: 100vw;
   overflow-x: hidden;
-  background-color: #FFFFFF;
+  /* Light mode: fondo con sutil tinte violeta (menos gris puro) */
+  background-color: #FAFAFF;
   color: #0A0A14;
 }
 
@@ -79,27 +80,55 @@ html, body {
 ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
 ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #9090aa; }
-::selection { background: rgba(88,86,214,.18); color: #0A0A14; }
+::selection { background: rgba(88,86,214,.20); color: #0A0A14; }
 
 /* ── Gradientes utilitarios ─────────────────────────────────────*/
 .gradient-hero {
   background:
-    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(88,86,214,.10) 0%, transparent 70%),
-    linear-gradient(180deg, #F5F4FF 0%, #FFFFFF 40%);
+    radial-gradient(ellipse 90% 70% at 50% -5%,  rgba(88,86,214,.22) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 50% at 80% 40%, rgba(168,85,247,.10) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 10% 80%, rgba(88,86,214,.06) 0%, transparent 50%),
+    linear-gradient(180deg, #EEEEFF 0%, #F5F4FF 30%, #FAFAFF 60%);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gradient-hero {
+    background:
+      radial-gradient(ellipse 90% 70% at 50% -5%,  rgba(88,86,214,.18) 0%, transparent 65%),
+      radial-gradient(ellipse 60% 50% at 80% 40%, rgba(168,85,247,.09) 0%, transparent 60%),
+      linear-gradient(180deg, #0e0e20 0%, #0e0e18 35%, #0e0e16 60%);
+  }
 }
 
 .gradient-card-img {
-  background: linear-gradient(145deg, #F0EFFF 0%, #FFFFFF 100%);
+  background: linear-gradient(145deg, #EEEDFF 0%, #F5F4FF 50%, #FAFAFF 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gradient-card-img {
+    background: linear-gradient(145deg, #14142a 0%, #111120 50%, #0e0e1c 100%);
+  }
 }
 
 .gradient-surface {
-  background: linear-gradient(180deg, #FFFFFF 0%, #F9F8FF 100%);
+  background: linear-gradient(180deg, #FFFFFF 0%, #F7F6FF 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gradient-surface {
+    background: linear-gradient(180deg, #12121f 0%, #0e0e16 100%);
+  }
 }
 
 /* ── Sombras ────────────────────────────────────────────────────*/
-.shadow-card    { box-shadow: 0 1px 3px rgba(10,10,20,.07), 0 4px 16px rgba(10,10,20,.05); }
-.shadow-card-lg { box-shadow: 0 4px 24px rgba(10,10,20,.11), 0 1px 4px rgba(10,10,20,.06); }
+.shadow-card    { box-shadow: 0 1px 3px rgba(88,86,214,.10), 0 4px 16px rgba(88,86,214,.06); }
+.shadow-card-lg { box-shadow: 0 4px 24px rgba(88,86,214,.18), 0 1px 4px rgba(88,86,214,.10); }
 .shadow-drawer  { box-shadow: -8px 0 40px rgba(10,10,20,.12); }
+
+@media (prefers-color-scheme: dark) {
+  .shadow-card    { box-shadow: 0 1px 3px rgba(0,0,0,.3),  0 4px 16px rgba(0,0,0,.25); }
+  .shadow-card-lg { box-shadow: 0 4px 24px rgba(0,0,0,.4), 0 1px 4px rgba(0,0,0,.2); }
+}
 
 /* ── Animaciones ────────────────────────────────────────────────*/
 @keyframes fadeInUp {
