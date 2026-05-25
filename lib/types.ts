@@ -82,6 +82,16 @@ export interface ProductFilters {
   min_price?: number
   max_price?: number
   sort?: 'price_asc' | 'price_desc' | 'newest' | 'name_asc'
+  page?: number
+}
+
+// ─── Resultado paginado ──────────────────────────────────────
+export interface PaginatedProducts {
+  items:      Product[]
+  total:      number
+  page:       number
+  pageSize:   number
+  totalPages: number
 }
 
 // ─── Respuestas API ──────────────────────────────────────────

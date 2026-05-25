@@ -32,6 +32,16 @@ html, body {
   color: #0F0F14;
 }
 
+@media (prefers-color-scheme: dark) {
+  html, body {
+    background-color: #0e0e16;
+    color: #f1f0ff;
+  }
+  ::-webkit-scrollbar-track { background: #0e0e16; }
+  ::-webkit-scrollbar-thumb { background: #2a2a40; }
+  ::-webkit-scrollbar-thumb:hover { background: #3a3a55; }
+}
+
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: #FAFAFA; }
 ::-webkit-scrollbar-thumb { background: #D0D0DC; border-radius: 3px; }
