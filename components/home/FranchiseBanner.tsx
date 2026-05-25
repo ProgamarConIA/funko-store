@@ -51,11 +51,11 @@ const THEMES: Record<FKey, Theme> = {
     },
     chars: [
       { name: 'Spider-Man', initial: '🕷', rotation: -6, yOffset: -10,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/1/1e/Spider-Man_Homecoming_poster.jpg/290px-Spider-Man_Homecoming_poster.jpg' },
+        url: 'https://pngimg.com/uploads/spiderman/spiderman_PNG30.png' },
       { name: 'Iron Man', initial: '⚙', rotation: 4, yOffset: 8,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/0/02/Iron_Man_%28film%29.jpg/290px-Iron_Man_%28film%29.jpg' },
+        url: 'https://pngimg.com/uploads/iron_man/iron_man_PNG28.png' },
       { name: 'Thor', initial: '⚡', rotation: -4, yOffset: -6,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/f/f0/Thor_-_Movie_Poster.jpg/290px-Thor_-_Movie_Poster.jpg' },
+        url: 'https://pngimg.com/uploads/thor/thor_PNG7.png' },
     ],
     chipBg:    'rgba(232,41,60,0.18)',
     chipColor: '#FF8090',
@@ -77,11 +77,11 @@ const THEMES: Record<FKey, Theme> = {
     },
     chars: [
       { name: 'Batman', initial: '🦇', rotation: -7, yOffset: -14,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/8/8a/Dark_knight_rises.jpg/290px-Dark_knight_rises.jpg' },
+        url: 'https://pngimg.com/uploads/batman/batman_PNG14.png' },
       { name: 'Wonder Woman', initial: '⭐', rotation: 5, yOffset: 8,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/f/f4/Wonder_Woman_%282017_film%29.png/290px-Wonder_Woman_%282017_film%29.png' },
+        url: 'https://pngimg.com/uploads/wonder_woman/wonder_woman_PNG33.png' },
       { name: 'Superman', initial: '🔵', rotation: -3, yOffset: -4,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/e/ef/Man_of_Steel_2013_Poster.jpg/290px-Man_of_Steel_2013_Poster.jpg' },
+        url: 'https://pngimg.com/uploads/superman/superman_PNG13.png' },
     ],
     chipBg:    'rgba(30,144,255,0.14)',
     chipColor: '#72B8FF',
@@ -104,11 +104,11 @@ const THEMES: Record<FKey, Theme> = {
     },
     chars: [
       { name: 'Mickey Mouse', initial: '🐭', rotation: -5, yOffset: -10,
-        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Mickey_Mouse_Poster.jpg/290px-Mickey_Mouse_Poster.jpg' },
+        url: 'https://pngimg.com/uploads/mickey_mouse/mickey_mouse_PNG3.png' },
       { name: 'Elsa', initial: '❄', rotation: 4, yOffset: 8,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/0/05/Frozen_%282013_film%29_poster.jpg/290px-Frozen_%282013_film%29_poster.jpg' },
+        url: 'https://pngimg.com/uploads/elsa/elsa_PNG9.png' },
       { name: 'Simba', initial: '🦁', rotation: -4, yOffset: -5,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/3/3d/The_Lion_King_2019_film_poster.jpg/290px-The_Lion_King_2019_film_poster.jpg' },
+        url: 'https://pngimg.com/uploads/simba/simba_PNG3.png' },
     ],
     chipBg:    'rgba(255,215,0,0.14)',
     chipColor: '#FFE57A',
@@ -130,11 +130,11 @@ const THEMES: Record<FKey, Theme> = {
     },
     chars: [
       { name: 'Naruto', initial: '🍥', rotation: -7, yOffset: -14,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/9/93/Naruto_Shippuden_poster.jpg/290px-Naruto_Shippuden_poster.jpg' },
+        url: 'https://pngimg.com/uploads/naruto/naruto_PNG42.png' },
       { name: 'Goku', initial: '🔥', rotation: 5, yOffset: 8,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/5/5b/Dragon_Ball_Super_broly_poster.jpg/290px-Dragon_Ball_Super_broly_poster.jpg' },
+        url: 'https://pngimg.com/uploads/goku/goku_PNG11.png' },
       { name: 'Pikachu', initial: '⚡', rotation: -3, yOffset: -5,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/a/af/Pokemon_2019_poster.png/290px-Pokemon_2019_poster.png' },
+        url: 'https://assets.pokemon.com/assets/cms2/img/pokedex/full/025.png' },
     ],
     chipBg:    'rgba(255,107,107,0.18)',
     chipColor: '#FF9999',
@@ -157,11 +157,11 @@ const THEMES: Record<FKey, Theme> = {
     },
     chars: [
       { name: 'Darth Vader', initial: '🌑', rotation: -7, yOffset: -14,
-        url: 'https://upload.wikimedia.org/wikipedia/en/7/76/Darth_Vader.png' },
+        url: 'https://pngimg.com/uploads/darth_vader/darth_vader_PNG3.png' },
       { name: 'Yoda', initial: '🟢', rotation: 5, yOffset: 8,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/6/6f/Yoda_Attack_of_the_Clones.png/290px-Yoda_Attack_of_the_Clones.png' },
-      { name: 'Grogu', initial: '👶', rotation: -3, yOffset: -5,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/7f/Grogu_and_the_Mandalorian.jpg/290px-Grogu_and_the_Mandalorian.jpg' },
+        url: 'https://pngimg.com/uploads/yoda/yoda_PNG19.png' },
+      { name: 'Stormtrooper', initial: '⬜', rotation: -3, yOffset: -5,
+        url: 'https://pngimg.com/uploads/stormtrooper/stormtrooper_PNG18.png' },
     ],
     chipBg:    'rgba(65,105,225,0.15)',
     chipColor: '#88AAFF',
@@ -181,11 +181,11 @@ const THEMES: Record<FKey, Theme> = {
     },
     chars: [
       { name: 'Harry Potter', initial: '⚡', rotation: -5, yOffset: -10,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/j/j0/Harry_Potter_and_the_Deathly_Hallows_%E2%80%93_Part_2_film_poster.jpg/290px-Harry_Potter_and_the_Deathly_Hallows_%E2%80%93_Part_2_film_poster.jpg' },
+        url: 'https://pngimg.com/uploads/harry_potter/harry_potter_PNG49.png' },
       { name: 'Hermione', initial: '📚', rotation: 5, yOffset: 10,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/1/19/Harry_Potter_and_the_Philosopher%27s_Stone_film_poster.jpg/290px-Harry_Potter_and_the_Philosopher%27s_Stone_film_poster.jpg' },
+        url: 'https://pngimg.com/uploads/harry_potter/harry_potter_PNG80.png' },
       { name: 'Dumbledore', initial: '🪄', rotation: -3, yOffset: -5,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/b/b1/Harry_Potter_and_the_Order_of_the_Phoenix_movie.jpg/290px-Harry_Potter_and_the_Order_of_the_Phoenix_movie.jpg' },
+        url: 'https://pngimg.com/uploads/harry_potter/harry_potter_PNG66.png' },
     ],
     chipBg:    'rgba(197,160,40,0.14)',
     chipColor: '#DDBB55',
@@ -207,11 +207,11 @@ const THEMES: Record<FKey, Theme> = {
     },
     chars: [
       { name: 'Kratos', initial: '🪓', rotation: -5, yOffset: -10,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/1/1a/God_of_War_%282018%29.jpg/290px-God_of_War_%282018%29.jpg' },
-      { name: 'Master Chief', initial: '🪖', rotation: 5, yOffset: 10,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/3/33/Halo_Infinite_cover_art.jpg/290px-Halo_Infinite_cover_art.jpg' },
+        url: 'https://pngimg.com/uploads/kratos/kratos_PNG5.png' },
+      { name: 'Mario', initial: '🍄', rotation: 5, yOffset: 10,
+        url: 'https://pngimg.com/uploads/mario/mario_PNG72.png' },
       { name: 'Link', initial: '🗡', rotation: -3, yOffset: -5,
-        url: 'https://upload.wikimedia.org/wikipedia/en/thumb/4/4e/The_Legend_of_Zelda_Breath_of_the_Wild.jpg/290px-The_Legend_of_Zelda_Breath_of_the_Wild.jpg' },
+        url: 'https://pngimg.com/uploads/link/link_PNG39.png' },
     ],
     chipBg:    'rgba(0,230,118,0.12)',
     chipColor: '#66FFB3',
@@ -231,7 +231,7 @@ const PILLS = [
 ]
 
 /* ─────────────────────────────────────────────────────────────────
-   Tarjeta de personaje — imagen real con fallback gradiente
+   Tarjeta de personaje — PNG transparente + fallback gradiente
 ───────────────────────────────────────────────────────────────── */
 function CharCard({
   char, theme,
@@ -244,25 +244,28 @@ function CharCard({
 
   return (
     <div
-      className="relative flex-shrink-0 rounded-2xl overflow-hidden select-none"
+      className="relative flex-shrink-0 select-none"
       style={{
         width:     '130px',
-        height:    '190px',
+        height:    '195px',
         transform: `rotate(${char.rotation}deg) translateY(${char.yOffset}px)`,
-        background: `linear-gradient(145deg, rgba(${theme.accentRgb},0.15), rgba(0,0,0,0.55))`,
-        border:    `1px solid rgba(${theme.accentRgb},0.22)`,
-        boxShadow: `0 20px 50px rgba(0,0,0,0.65), 0 0 25px rgba(${theme.accentRgb},0.18)`,
+        filter:    `drop-shadow(0 12px 30px rgba(0,0,0,0.7)) drop-shadow(0 0 16px rgba(${theme.accentRgb},0.35))`,
       }}
     >
-      {/* Fallback: inicial + nombre del personaje */}
+      {/* Fondo de la tarjeta (visible cuando falla la imagen) */}
       {(failed || !loaded) && (
         <div
-          className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3"
-          style={{ opacity: failed ? 1 : 0, transition: 'opacity 0.3s' }}
+          className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center gap-2 p-3"
+          style={{
+            background: `linear-gradient(145deg, rgba(${theme.accentRgb},0.28) 0%, rgba(0,0,0,0.60) 100%)`,
+            border:     `1px solid rgba(${theme.accentRgb},0.25)`,
+            opacity:    failed ? 1 : 0.4,
+            transition: 'opacity 0.3s',
+          }}
         >
-          <span className="text-4xl">{char.initial}</span>
+          <span className="text-5xl">{char.initial}</span>
           <span
-            className="text-[10px] font-bold text-center leading-tight"
+            className="text-[10px] font-bold text-center leading-tight tracking-widest uppercase"
             style={{ color: theme.chipColor }}
           >
             {char.name}
@@ -270,7 +273,7 @@ function CharCard({
         </div>
       )}
 
-      {/* Imagen real del personaje */}
+      {/* Imagen PNG transparente del personaje */}
       {!failed && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -279,39 +282,34 @@ function CharCard({
           onLoad={() => setLoaded(true)}
           onError={() => { setFailed(true); setLoaded(false) }}
           style={{
-            position:  'absolute',
-            inset:     0,
-            width:     '100%',
-            height:    '100%',
-            objectFit: 'cover',
-            opacity:   loaded ? 1 : 0,
-            transition:'opacity 0.4s ease',
+            position:   'absolute',
+            inset:      0,
+            width:      '100%',
+            height:     '100%',
+            objectFit:  'contain',
+            objectPosition: 'bottom center',
+            opacity:    loaded ? 1 : 0,
+            transition: 'opacity 0.45s ease',
           }}
         />
       )}
 
-      {/* Brillo superior */}
-      <div
-        className="absolute inset-x-0 top-0 h-1/3 pointer-events-none"
-        style={{
-          background: `linear-gradient(to bottom, rgba(${theme.accentRgb},0.08), transparent)`,
-        }}
-      />
-
-      {/* Etiqueta nombre en la base */}
-      <div
-        className="absolute inset-x-0 bottom-0 px-2 py-1.5 text-center"
-        style={{
-          background: 'linear-gradient(to top, rgba(0,0,0,0.75), transparent)',
-        }}
-      >
-        <span
-          className="text-[9px] font-bold tracking-wider uppercase"
-          style={{ color: theme.chipColor }}
+      {/* Nombre del personaje flotando bajo la imagen */}
+      {loaded && (
+        <div
+          className="absolute inset-x-0 bottom-0 text-center pb-0.5"
         >
-          {char.name}
-        </span>
-      </div>
+          <span
+            className="text-[9px] font-bold tracking-widest uppercase"
+            style={{
+              color:      theme.chipColor,
+              textShadow: `0 0 8px rgba(${theme.accentRgb},0.8)`,
+            }}
+          >
+            {char.name}
+          </span>
+        </div>
+      )}
     </div>
   )
 }
