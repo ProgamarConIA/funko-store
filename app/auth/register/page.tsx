@@ -1,49 +1,89 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { translateAuthError } from '@/lib/supabase/errors'
 import Link from 'next/link'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
-import { Mail, Lock, User, CheckCircle } from 'lucide-react'
+import { Mail, Lock, User, CheckCircle, AlertCircle } from 'lucide-react'
 
 export default function RegisterPage() {
-  const supabase = createClient()
+  // Cliente Supabase estable
+  const supabase = useRef(createClient()).current
 
-  const [form, setForm]     = useState({ full_name: '', email: '', password: '', confirm: '' })
+  const [form, setForm]       = useState({ full_name: '', email: '', password: '', confirm: '' })
   const [loading, setLoading] = useState(false)
-  const [error, setError]   = useState('')
+  const [error, setError]     = useState('')
   const [success, setSuccess] = useState(false)
+  const [needsConfirm, setNeedsConfirm] = useState(true) // ¿el registro requiere confirmación de email?
+  // Guard contra doble-submit
+  const inFlight = useRef(false)
+
+  const handleChange = (field: keyof typeof form) =>
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      setForm(prev => ({ ...prev, [field]: e.target.value }))
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (inFlight.current || loading) return
+    inFlight.current = true
     setError('')
 
+    // ── Validaciones cliente ──────────────────────────────────
     if (form.password !== form.confirm) {
       setError('Las contraseñas no coinciden.')
+      inFlight.current = false
       return
     }
     if (form.password.length < 6) {
       setError('La contraseña debe tener al menos 6 caracteres.')
+      inFlight.current = false
       return
     }
 
     setLoading(true)
-    const { error } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: { data: { full_name: form.full_name } },
-    })
 
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-    } else {
-      setSuccess(true)
+    try {
+      const { data, error: authError } = await supabase.auth.signUp({
+        email:    form.email.trim().toLowerCase(),
+        password: form.password,
+        options: {
+          data: { full_name: form.full_name.trim() },
+          // Supabase usará este URL para los links de confirmación de email
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+
+      if (authError) {
+        setError(translateAuthError(authError.message))
+        setLoading(false)
+        return
+      }
+
+      // ── Determinar si necesita confirmación de email ──────────
+      // data.session es null → confirmación requerida (default en Supabase)
+      // data.session existe  → confirmación deshabilitada → login automático
+      if (data.session) {
+        // Sin confirmación requerida: ya está logueado, redirigir a home
+        setNeedsConfirm(false)
+        setSuccess(true)
+        setTimeout(() => { window.location.href = '/' }, 1500)
+      } else if (data.user?.identities?.length === 0) {
+        // identities vacío = el email ya existe pero el usuario no lo sabe
+        setError('Ya existe una cuenta con este email. Intentá iniciar sesión.')
+        setLoading(false)
+      } else {
+        // Caso normal: confirmación de email requerida
+        setNeedsConfirm(true)
+        setSuccess(true)
+      }
+    } finally {
+      inFlight.current = false
     }
   }
 
-  /* ── Pantalla de éxito ── */
+  /* ── Pantalla de éxito ─────────────────────────────────────── */
   if (success) {
     return (
       <div className="min-h-[85vh] flex items-center justify-center px-4 bg-[#FAFAFA]">
@@ -57,31 +97,49 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Texto */}
-            <div>
-              <h2 className="text-2xl font-bold text-[#0F0F14]">¡Cuenta creada!</h2>
-              <p className="text-[#6B6B7B] mt-2 text-sm leading-relaxed">
-                Revisá tu email{' '}
-                <span className="font-semibold text-[#0F0F14]">{form.email}</span>{' '}
-                y confirmá tu cuenta para empezar a coleccionar.
-              </p>
-            </div>
-
-            {/* CTA */}
-            <Link
-              href="/auth/login"
-              className="inline-flex items-center justify-center w-full py-3 px-6 bg-[#5856D6] hover:bg-[#4644b8] text-white font-semibold rounded-xl transition-colors"
-            >
-              Ir al login
-            </Link>
-
+            {needsConfirm ? (
+              /* Confirmación de email requerida */
+              <>
+                <div>
+                  <h2 className="text-2xl font-bold text-[#0F0F14]">¡Cuenta creada!</h2>
+                  <p className="text-[#6B6B7B] mt-2 text-sm leading-relaxed">
+                    Te enviamos un email a{' '}
+                    <span className="font-semibold text-[#0F0F14]">{form.email}</span>.
+                    <br />
+                    Hacé click en el link para confirmar tu cuenta.
+                  </p>
+                  <p className="text-[#B0B0BE] mt-3 text-xs">
+                    Revisá también la carpeta de spam si no aparece.
+                  </p>
+                </div>
+                <Link
+                  href="/auth/login"
+                  className="inline-flex items-center justify-center w-full py-3 px-6 bg-[#5856D6] hover:bg-[#4644b8] text-white font-semibold rounded-xl transition-colors"
+                >
+                  Ir al login
+                </Link>
+              </>
+            ) : (
+              /* Sin confirmación — acceso inmediato */
+              <>
+                <div>
+                  <h2 className="text-2xl font-bold text-[#0F0F14]">¡Bienvenido!</h2>
+                  <p className="text-[#6B6B7B] mt-2 text-sm">
+                    Tu cuenta fue creada. Redirigiendo...
+                  </p>
+                </div>
+                <div className="flex justify-center">
+                  <div className="w-6 h-6 border-2 border-[#5856D6] border-t-transparent rounded-full animate-spin" />
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
     )
   }
 
-  /* ── Formulario de registro ── */
+  /* ── Formulario de registro ────────────────────────────────── */
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-10 bg-[#FAFAFA]">
       <div className="w-full max-w-md">
@@ -104,49 +162,60 @@ export default function RegisterPage() {
             id="full_name"
             label="Nombre completo"
             value={form.full_name}
-            onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+            onChange={handleChange('full_name')}
             placeholder="Juan Pérez"
             icon={<User className="w-4 h-4" />}
             required
+            autoComplete="name"
           />
           <Input
             id="email"
             label="Email"
             type="email"
             value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            onChange={handleChange('email')}
             placeholder="tu@email.com"
             icon={<Mail className="w-4 h-4" />}
             required
+            autoComplete="email"
           />
           <Input
             id="password"
             label="Contraseña"
             type="password"
             value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            onChange={handleChange('password')}
             placeholder="Mínimo 6 caracteres"
             icon={<Lock className="w-4 h-4" />}
             required
+            autoComplete="new-password"
           />
           <Input
             id="confirm"
             label="Confirmar contraseña"
             type="password"
             value={form.confirm}
-            onChange={(e) => setForm({ ...form, confirm: e.target.value })}
+            onChange={handleChange('confirm')}
             placeholder="Repetí tu contraseña"
             icon={<Lock className="w-4 h-4" />}
             required
+            autoComplete="new-password"
           />
 
           {error && (
-            <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-              {error}
+            <div className="flex items-start gap-2.5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{error}</span>
             </div>
           )}
 
-          <Button type="submit" variant="accent" loading={loading} className="w-full" size="lg">
+          <Button
+            type="submit"
+            variant="accent"
+            loading={loading}
+            className="w-full"
+            size="lg"
+          >
             {loading ? 'Creando cuenta...' : 'Crear cuenta'}
           </Button>
         </form>
