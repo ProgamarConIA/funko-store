@@ -10,24 +10,35 @@ export default function SearchBar() {
   const [value, setValue] = useState(params.get('search') ?? '')
   const [, startTransition] = useTransition()
 
-  /* Sync URL param → input (cuando cambia por navegación externa) */
+  /* Sync URL → input (paginación, filtros externos, navegación) */
   useEffect(() => {
     const urlSearch = params.get('search') ?? ''
-    startTransition(() => { setValue(urlSearch) })
+    startTransition(() => setValue(urlSearch))
   }, [params])
 
   const handleSearch = useCallback(
     (term: string) => {
+      /**
+       * FIX paginación: si el término ya está en la URL, no navegar.
+       * Causa del bug: cuando `params` cambia (ej: ?page=2→?page=3),
+       * `handleSearch` se recrea y el efecto de debounce se dispara 400ms
+       * después llamando handleSearch('') que empujaba /?  sin page=.
+       * Con este guard, si el término coincide con lo que ya está en la URL
+       * (incluido '' cuando no hay búsqueda activa), no se hace router.push.
+       */
+      const currentSearch = params.get('search') ?? ''
+      if (term.trim() === currentSearch) return
+
       const next = new URLSearchParams(params.toString())
       if (term.trim()) next.set('search', term.trim())
-      else next.delete('search')
-      next.delete('page')
+      else             next.delete('search')
+      next.delete('page')   // nueva búsqueda → volver a página 1
       router.push(`/?${next.toString()}`)
     },
-    [params, router]
+    [params, router],
   )
 
-  /* Debounce typing → navegación */
+  /* Debounce de escritura */
   useEffect(() => {
     const timer = setTimeout(() => handleSearch(value), 400)
     return () => clearTimeout(timer)

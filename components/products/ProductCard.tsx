@@ -55,7 +55,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             src={imgSrc}
             alt={product.name}
             fill
-            className="object-contain p-5 transition-transform duration-300 group-hover:scale-[1.06]"
+            className="object-contain p-5 transition-transform duration-300 group-hover:scale-[1.06] product-img-shadow"
             sizes="(max-width: 480px) 100vw, (max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             onError={() => setImgError(true)}
           />

@@ -106,7 +106,17 @@ html, body {
 
 @media (prefers-color-scheme: dark) {
   .gradient-card-img {
-    background: linear-gradient(145deg, #14142a 0%, #111120 50%, #0e0e1c 100%);
+    /* Fondo ligeramente más claro para que el blanco de las fotos
+       de producto no contraste tan fuertemente con el fondo oscuro */
+    background: linear-gradient(145deg, #252540 0%, #1e1e38 50%, #18182e 100%);
+  }
+}
+
+/* Sombra sobre la imagen del producto en dark mode
+   para "separar" visualmente el funko del fondo */
+@media (prefers-color-scheme: dark) {
+  .product-img-shadow {
+    filter: drop-shadow(0 4px 18px rgba(0,0,0,.70));
   }
 }
 

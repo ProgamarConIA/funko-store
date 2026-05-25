@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "fix-images": "node scripts/fix-images.js",
+    "fix-images:force": "node scripts/fix-images.js --force",
+    "fix-images:dry": "node scripts/fix-images.js --dry-run"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
