@@ -50,11 +50,11 @@ const THEMES: Record<FKey, Theme> = {
       backgroundSize:  '26px 26px',
     },
     chars: [
-      { name: 'Spider-Man', initial: '🕷', rotation: -6, yOffset: -10,
+      { name: 'Spider-Man', initial: '🕷', rotation: -2, yOffset: 0,
         url: 'https://pngimg.com/uploads/spiderman/spiderman_PNG30.png' },
-      { name: 'Iron Man', initial: '⚙', rotation: 4, yOffset: 8,
+      { name: 'Iron Man', initial: '⚙', rotation: 1, yOffset: 0,
         url: 'https://pngimg.com/uploads/iron_man/iron_man_PNG28.png' },
-      { name: 'Thor', initial: '⚡', rotation: -4, yOffset: -6,
+      { name: 'Thor', initial: '⚡', rotation: -1, yOffset: 0,
         url: 'https://pngimg.com/uploads/thor/thor_PNG7.png' },
     ],
     chipBg:    'rgba(232,41,60,0.18)',
@@ -76,11 +76,11 @@ const THEMES: Record<FKey, Theme> = {
       backgroundSize: '38px 38px',
     },
     chars: [
-      { name: 'Batman', initial: '🦇', rotation: -7, yOffset: -14,
+      { name: 'Batman', initial: '🦇', rotation: -2, yOffset: 0,
         url: 'https://pngimg.com/uploads/batman/batman_PNG14.png' },
-      { name: 'Wonder Woman', initial: '⭐', rotation: 5, yOffset: 8,
+      { name: 'Wonder Woman', initial: '⭐', rotation: 1, yOffset: 0,
         url: 'https://pngimg.com/uploads/wonder_woman/wonder_woman_PNG33.png' },
-      { name: 'Superman', initial: '🔵', rotation: -3, yOffset: -4,
+      { name: 'Superman', initial: '🔵', rotation: -1, yOffset: 0,
         url: 'https://pngimg.com/uploads/superman/superman_PNG13.png' },
     ],
     chipBg:    'rgba(30,144,255,0.14)',
@@ -103,11 +103,11 @@ const THEMES: Record<FKey, Theme> = {
       backgroundPosition:'0 0, 24px 24px',
     },
     chars: [
-      { name: 'Mickey Mouse', initial: '🐭', rotation: -5, yOffset: -10,
+      { name: 'Mickey Mouse', initial: '🐭', rotation: -2, yOffset: 0,
         url: 'https://pngimg.com/uploads/mickey_mouse/mickey_mouse_PNG3.png' },
-      { name: 'Elsa', initial: '❄', rotation: 4, yOffset: 8,
+      { name: 'Elsa', initial: '❄', rotation: 1, yOffset: 0,
         url: 'https://pngimg.com/uploads/elsa/elsa_PNG9.png' },
-      { name: 'Simba', initial: '🦁', rotation: -4, yOffset: -5,
+      { name: 'Simba', initial: '🦁', rotation: -1, yOffset: 0,
         url: 'https://pngimg.com/uploads/simba/simba_PNG3.png' },
     ],
     chipBg:    'rgba(255,215,0,0.14)',
@@ -129,11 +129,11 @@ const THEMES: Record<FKey, Theme> = {
         'transparent 1px, transparent 14px)',
     },
     chars: [
-      { name: 'Naruto', initial: '🍥', rotation: -7, yOffset: -14,
+      { name: 'Naruto', initial: '🍥', rotation: -2, yOffset: 0,
         url: 'https://pngimg.com/uploads/naruto/naruto_PNG42.png' },
-      { name: 'Goku', initial: '🔥', rotation: 5, yOffset: 8,
+      { name: 'Goku', initial: '🔥', rotation: 1, yOffset: 0,
         url: 'https://pngimg.com/uploads/goku/goku_PNG11.png' },
-      { name: 'Pikachu', initial: '⚡', rotation: -3, yOffset: -5,
+      { name: 'Pikachu', initial: '⚡', rotation: -1, yOffset: 0,
         url: 'https://assets.pokemon.com/assets/cms2/img/pokedex/full/025.png' },
     ],
     chipBg:    'rgba(255,107,107,0.18)',
@@ -156,11 +156,11 @@ const THEMES: Record<FKey, Theme> = {
       backgroundPosition:'12px 18px, 44px 60px',
     },
     chars: [
-      { name: 'Darth Vader', initial: '🌑', rotation: -7, yOffset: -14,
+      { name: 'Darth Vader', initial: '🌑', rotation: -2, yOffset: 0,
         url: 'https://pngimg.com/uploads/darth_vader/darth_vader_PNG3.png' },
-      { name: 'Yoda', initial: '🟢', rotation: 5, yOffset: 8,
+      { name: 'Yoda', initial: '🟢', rotation: 1, yOffset: 0,
         url: 'https://pngimg.com/uploads/yoda/yoda_PNG19.png' },
-      { name: 'Stormtrooper', initial: '⬜', rotation: -3, yOffset: -5,
+      { name: 'Stormtrooper', initial: '⬜', rotation: -1, yOffset: 0,
         url: 'https://pngimg.com/uploads/stormtrooper/stormtrooper_PNG18.png' },
     ],
     chipBg:    'rgba(65,105,225,0.15)',
@@ -180,11 +180,11 @@ const THEMES: Record<FKey, Theme> = {
       backgroundSize:  '34px 34px',
     },
     chars: [
-      { name: 'Harry Potter', initial: '⚡', rotation: -5, yOffset: -10,
+      { name: 'Harry Potter', initial: '⚡', rotation: -2, yOffset: 0,
         url: 'https://pngimg.com/uploads/harry_potter/harry_potter_PNG49.png' },
-      { name: 'Hermione', initial: '📚', rotation: 5, yOffset: 10,
+      { name: 'Hermione', initial: '📚', rotation: 1, yOffset: 0,
         url: 'https://pngimg.com/uploads/harry_potter/harry_potter_PNG80.png' },
-      { name: 'Dumbledore', initial: '🪄', rotation: -3, yOffset: -5,
+      { name: 'Dumbledore', initial: '🪄', rotation: -1, yOffset: 0,
         url: 'https://pngimg.com/uploads/harry_potter/harry_potter_PNG66.png' },
     ],
     chipBg:    'rgba(197,160,40,0.14)',
@@ -206,11 +206,11 @@ const THEMES: Record<FKey, Theme> = {
       backgroundSize: '18px 18px',
     },
     chars: [
-      { name: 'Kratos', initial: '🪓', rotation: -5, yOffset: -10,
+      { name: 'Kratos', initial: '🪓', rotation: -2, yOffset: 0,
         url: 'https://pngimg.com/uploads/kratos/kratos_PNG5.png' },
-      { name: 'Mario', initial: '🍄', rotation: 5, yOffset: 10,
+      { name: 'Mario', initial: '🍄', rotation: 1, yOffset: 0,
         url: 'https://pngimg.com/uploads/mario/mario_PNG72.png' },
-      { name: 'Link', initial: '🗡', rotation: -3, yOffset: -5,
+      { name: 'Link', initial: '🗡', rotation: -1, yOffset: 0,
         url: 'https://pngimg.com/uploads/link/link_PNG39.png' },
     ],
     chipBg:    'rgba(0,230,118,0.12)',
@@ -246,26 +246,26 @@ function CharCard({
     <div
       className="relative flex-shrink-0 select-none"
       style={{
-        width:     '130px',
-        height:    '195px',
-        transform: `rotate(${char.rotation}deg) translateY(${char.yOffset}px)`,
-        filter:    `drop-shadow(0 12px 30px rgba(0,0,0,0.7)) drop-shadow(0 0 16px rgba(${theme.accentRgb},0.35))`,
+        width:     '170px',
+        height:    '290px',
+        transform: `rotate(${char.rotation}deg)`,
+        filter:    `drop-shadow(0 16px 40px rgba(0,0,0,0.75)) drop-shadow(0 0 20px rgba(${theme.accentRgb},0.40))`,
       }}
     >
-      {/* Fondo de la tarjeta (visible cuando falla la imagen) */}
+      {/* Fondo (visible cuando falla la imagen) */}
       {(failed || !loaded) && (
         <div
-          className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center gap-2 p-3"
+          className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center gap-3 p-4"
           style={{
-            background: `linear-gradient(145deg, rgba(${theme.accentRgb},0.28) 0%, rgba(0,0,0,0.60) 100%)`,
-            border:     `1px solid rgba(${theme.accentRgb},0.25)`,
+            background: `linear-gradient(145deg, rgba(${theme.accentRgb},0.30) 0%, rgba(0,0,0,0.65) 100%)`,
+            border:     `1px solid rgba(${theme.accentRgb},0.28)`,
             opacity:    failed ? 1 : 0.4,
             transition: 'opacity 0.3s',
           }}
         >
-          <span className="text-5xl">{char.initial}</span>
+          <span className="text-6xl">{char.initial}</span>
           <span
-            className="text-[10px] font-bold text-center leading-tight tracking-widest uppercase"
+            className="text-[11px] font-bold text-center leading-tight tracking-widest uppercase"
             style={{ color: theme.chipColor }}
           >
             {char.name}
@@ -273,7 +273,7 @@ function CharCard({
         </div>
       )}
 
-      {/* Imagen PNG transparente del personaje */}
+      {/* Imagen PNG transparente */}
       {!failed && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -282,28 +282,26 @@ function CharCard({
           onLoad={() => setLoaded(true)}
           onError={() => { setFailed(true); setLoaded(false) }}
           style={{
-            position:   'absolute',
-            inset:      0,
-            width:      '100%',
-            height:     '100%',
-            objectFit:  'contain',
+            position:       'absolute',
+            inset:          0,
+            width:          '100%',
+            height:         '100%',
+            objectFit:      'contain',
             objectPosition: 'bottom center',
-            opacity:    loaded ? 1 : 0,
-            transition: 'opacity 0.45s ease',
+            opacity:        loaded ? 1 : 0,
+            transition:     'opacity 0.45s ease',
           }}
         />
       )}
 
-      {/* Nombre del personaje flotando bajo la imagen */}
+      {/* Nombre con glow bajo el personaje */}
       {loaded && (
-        <div
-          className="absolute inset-x-0 bottom-0 text-center pb-0.5"
-        >
+        <div className="absolute inset-x-0 bottom-0 text-center">
           <span
-            className="text-[9px] font-bold tracking-widest uppercase"
+            className="text-[10px] font-bold tracking-widest uppercase"
             style={{
               color:      theme.chipColor,
-              textShadow: `0 0 8px rgba(${theme.accentRgb},0.8)`,
+              textShadow: `0 0 10px rgba(${theme.accentRgb},0.9), 0 0 20px rgba(${theme.accentRgb},0.5)`,
             }}
           >
             {char.name}
@@ -355,7 +353,7 @@ export default function FranchiseBanner({ franchise, activeFranchise, count }: P
       />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row items-center gap-8 py-12 lg:py-10">
+        <div className="flex flex-col lg:flex-row items-center gap-8 py-10 lg:py-8">
 
           {/* ── TEXTO ────────────────────────────────────────────── */}
           <div className="flex-1 text-center lg:text-left">
@@ -434,7 +432,10 @@ export default function FranchiseBanner({ franchise, activeFranchise, count }: P
           </div>
 
           {/* ── PERSONAJES ───────────────────────────────────────── */}
-          <div className="flex items-end justify-center gap-3 pointer-events-none lg:flex-shrink-0">
+          <div
+            className="flex items-end justify-center pointer-events-none lg:flex-shrink-0"
+            style={{ gap: '20px' }}
+          >
             {theme.chars.map((char) => (
               <CharCard key={char.name} char={char} theme={theme} />
             ))}
