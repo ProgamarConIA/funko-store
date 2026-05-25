@@ -6,7 +6,7 @@ import HeroShowcase from '@/components/home/HeroShowcase'
 import FranchiseBanner from '@/components/home/FranchiseBanner'
 import Pagination from '@/components/ui/Pagination'
 import { PageLoader } from '@/components/ui/Spinner'
-import type { Product, ProductFilters as Filters, PaginatedProducts } from '@/lib/types'
+import type { Product, ProductFilters as Filters } from '@/lib/types'
 import { Package } from 'lucide-react'
 import Link from 'next/link'
 
@@ -27,27 +27,37 @@ const FRANCHISE_PILLS = [
 
 const PAGE_SIZE = 12
 
+interface PageResult {
+  items:      Product[]
+  total:      number
+  page:       number
+  totalPages: number
+}
+
 /* ─────────────────────────────────────────────────────────────────
-   getProducts — consulta paginada con conteo total
+   getProducts — construye filtros primero, luego aplica range
 ───────────────────────────────────────────────────────────────── */
-async function getProducts(filters: Filters): Promise<PaginatedProducts> {
+async function getProducts(filters: Filters): Promise<PageResult> {
   const supabase = await createClient()
 
-  const page     = Math.max(1, filters.page ?? 1)
-  const from     = (page - 1) * PAGE_SIZE
-  const to       = from + PAGE_SIZE - 1
+  const page = Math.max(1, filters.page ?? 1)
+  const from = (page - 1) * PAGE_SIZE
+  const to   = from + PAGE_SIZE - 1
 
-  const orderCol = filters.sort === 'price_asc'  ? 'price'      :
-                   filters.sort === 'price_desc' ? 'price'      :
-                   filters.sort === 'name_asc'   ? 'name'       : 'created_at'
-  const ascending = filters.sort !== 'price_desc' && filters.sort !== 'newest'
+  const orderCol =
+    filters.sort === 'price_asc'  ? 'price'      :
+    filters.sort === 'price_desc' ? 'price'      :
+    filters.sort === 'name_asc'   ? 'name'       : 'created_at'
 
-  /* Construir query base */
+  const ascending =
+    filters.sort === 'price_asc' ? true  :
+    filters.sort === 'name_asc'  ? true  : false
+
+  // 1. Construir query con todos los filtros WHERE primero
   let query = supabase
     .from('products')
     .select('*', { count: 'exact' })
     .order(orderCol, { ascending })
-    .range(from, to)
 
   if (filters.search)    query = query.ilike('name', `%${filters.search}%`)
   if (filters.franchise) query = query.eq('franchise', filters.franchise)
@@ -55,45 +65,34 @@ async function getProducts(filters: Filters): Promise<PaginatedProducts> {
   if (filters.min_price) query = query.gte('price', Number(filters.min_price))
   if (filters.max_price) query = query.lte('price', Number(filters.max_price))
 
-  const { data, error, count } = await query
+  // 2. Aplicar rango al final
+  const { data, error, count } = await query.range(from, to)
 
-  if (error) { console.error('Error:', error) }
+  if (error) console.error('getProducts error:', error)
 
   const total      = count ?? 0
-  const totalPages = Math.ceil(total / PAGE_SIZE)
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   return {
     items: (data ?? []) as Product[],
     total,
     page,
-    pageSize:   PAGE_SIZE,
     totalPages,
   }
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   getCount — cuenta total sin paginación (para el hero)
-───────────────────────────────────────────────────────────────── */
-async function getCount(franchise?: string): Promise<number> {
-  const supabase = await createClient()
-  let q = supabase.from('products').select('id', { count: 'exact', head: true })
-  if (franchise) q = q.eq('franchise', franchise)
-  const { count } = await q
-  return count ?? 0
-}
-
-/* ─────────────────────────────────────────────────────────────────
-   buildHref — genera URL preservando filtros actuales
+   buildHref — preserva filtros actuales al cambiar de página
 ───────────────────────────────────────────────────────────────── */
 function buildHref(
   params: Record<string, string | undefined>,
-  page: number,
+  targetPage: number,
 ): string {
   const qs = new URLSearchParams()
   for (const [k, v] of Object.entries(params)) {
     if (v && k !== 'page') qs.set(k, v)
   }
-  if (page > 1) qs.set('page', String(page))
+  if (targetPage > 1) qs.set('page', String(targetPage))
   const str = qs.toString()
   return str ? `/?${str}` : '/'
 }
@@ -114,13 +113,9 @@ export default async function HomePage({ searchParams }: PageProps) {
     page:      params.page ? Number(params.page) : 1,
   }
 
-  const [paginated, totalCount] = await Promise.all([
-    getProducts(filters),
-    getCount(filters.franchise),
-  ])
+  const { items: products, total, page, totalPages } = await getProducts(filters)
 
-  const { items: products, total, page, totalPages } = paginated
-  const hasFilters    = !!(filters.search || filters.franchise || filters.category)
+  const hasFilters      = !!(filters.search || filters.franchise || filters.category)
   const activeFranchise = filters.franchise ?? ''
 
   return (
@@ -128,13 +123,13 @@ export default async function HomePage({ searchParams }: PageProps) {
 
       {/* ── HERO ─────────────────────────────────────────────────
           Franquicia activa → banner temático
-          Sin franquicia   → hero genérico con HeroShowcase
+          Sin franquicia   → hero genérico
       ──────────────────────────────────────────────────────────── */}
       {activeFranchise ? (
         <FranchiseBanner
           franchise={activeFranchise}
           activeFranchise={activeFranchise}
-          count={totalCount}
+          count={total}
         />
       ) : (
         <section className="relative overflow-hidden border-b border-[#E4E4EC] dark:border-[#1e1e35] bg-white dark:bg-[#0e0e16]">
@@ -154,7 +149,7 @@ export default async function HomePage({ searchParams }: PageProps) {
                 </h1>
                 <p className="text-[#6B6B7B] dark:text-[#9090aa] text-base sm:text-lg max-w-md mx-auto lg:mx-0 mb-8">
                   Más de{' '}
-                  <strong className="text-[#0F0F14] dark:text-[#f1f0ff]">{totalCount} figuras</strong>{' '}
+                  <strong className="text-[#0F0F14] dark:text-[#f1f0ff]">{total} figuras</strong>{' '}
                   originales de Marvel, DC, Disney, Anime y mucho más.
                 </p>
 
@@ -195,7 +190,7 @@ export default async function HomePage({ searchParams }: PageProps) {
           </Suspense>
         </div>
 
-        {/* Estado / conteo */}
+        {/* Conteo */}
         <div className="flex items-center justify-between mb-5">
           <span className="text-sm text-[#6B6B7B] dark:text-[#9090aa]">
             {total === 0
@@ -208,10 +203,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             )}
           </span>
           {hasFilters && (
-            <a
-              href="/"
-              className="text-xs text-[#5856D6] hover:text-[#4644b8] font-medium underline underline-offset-2"
-            >
+            <a href="/" className="text-xs text-[#5856D6] hover:text-[#4644b8] font-medium underline underline-offset-2">
               Ver todos
             </a>
           )}
@@ -223,9 +215,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             <div className="w-16 h-16 bg-white dark:bg-[#12121f] border border-[#E4E4EC] dark:border-[#1e1e35] rounded-2xl flex items-center justify-center mb-4 shadow-card">
               <Package className="w-7 h-7 text-[#B0B0BE] dark:text-[#4a4a6a]" />
             </div>
-            <h3 className="text-[#0F0F14] dark:text-[#f1f0ff] font-semibold text-lg mb-2">
-              Sin resultados
-            </h3>
+            <h3 className="text-[#0F0F14] dark:text-[#f1f0ff] font-semibold text-lg mb-2">Sin resultados</h3>
             <p className="text-[#6B6B7B] dark:text-[#9090aa] text-sm max-w-xs">
               {hasFilters ? 'Ningún producto coincide con los filtros.' : 'Aún no hay productos cargados.'}
             </p>
@@ -235,11 +225,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             <Suspense fallback={<PageLoader />}>
               <div className="grid grid-cols-1 min-[480px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {products.map((product, i) => (
-                  <div
-                    key={product.id}
-                    className="animate-fade-in-up"
-                    style={{ animationDelay: `${i * 25}ms` }}
-                  >
+                  <div key={product.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 25}ms` }}>
                     <ProductCard product={product} />
                   </div>
                 ))}
