@@ -25,7 +25,7 @@ const FRANCHISE_PILLS = [
   { label: 'Juegos',       href: '/?franchise=Juegos',       emoji: '🎮' },
 ]
 
-const PAGE_SIZE = 12
+const PAGE_SIZE = 10
 
 interface PageResult {
   items:      Product[]

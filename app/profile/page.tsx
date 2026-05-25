@@ -28,16 +28,36 @@ export default async function ProfilePage() {
     .limit(5)
 
   const stats = [
-    { label: 'Pedidos totales', value: orders?.length ?? 0,              icon: <ShoppingBag className="w-5 h-5" /> },
-    { label: 'Miembro desde',   value: formatDate(user.created_at),      icon: <Calendar className="w-5 h-5" /> },
-    { label: 'Rol',             value: profile?.role === 'admin' ? '👑 Admin' : 'Coleccionista', icon: <User className="w-5 h-5" /> },
+    { label: 'Pedidos totales', value: orders?.length ?? 0,         icon: <ShoppingBag className="w-5 h-5" /> },
+    { label: 'Miembro desde',   value: formatDate(user.created_at), icon: <Calendar className="w-5 h-5" /> },
+    { label: 'Rol', value: profile?.role === 'admin' ? '👑 Admin' : 'Coleccionista', icon: <User className="w-5 h-5" /> },
   ]
 
-  return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  /* ─── Colores de estado (inline style para garantizar dark mode) ─── */
+  const statusStyle = (status: string) => {
+    const map: Record<string, { bg: string; color: string }> = {
+      delivered: { bg: 'rgba(74,222,128,.12)', color: '#4ade80' },
+      shipped:   { bg: 'rgba(96,165,250,.12)', color: '#60a5fa' },
+      paid:      { bg: 'rgba(34,211,238,.12)', color: '#22d3ee' },
+      pending:   { bg: 'rgba(250,204,21,.12)', color: '#facc15' },
+    }
+    return map[status] ?? { bg: 'rgba(160,160,184,.10)', color: '#a0a0b8' }
+  }
 
-      {/* Título de página */}
-      <h1 className="text-3xl font-extrabold text-[#0F0F14] dark:text-[#f1f0ff] mb-8">
+  const statusLabel = (status: string) =>
+    ({ pending:'Pendiente', paid:'Pagado', shipped:'Enviado', delivered:'Entregado' }[status] ?? status)
+
+  return (
+    /*
+      Usamos var(--text-primary) y var(--surface) en lugar de clases Tailwind dark:
+      para garantizar que el dark mode funcione independientemente de la versión
+      o configuración de Tailwind.
+    */
+    <div
+      className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10"
+      style={{ color: 'var(--text-primary)' }}
+    >
+      <h1 className="text-3xl font-extrabold mb-8" style={{ color: 'var(--text-primary)' }}>
         Mi perfil
       </h1>
 
@@ -45,26 +65,40 @@ export default async function ProfilePage() {
 
         {/* ── Info principal ──────────────────────────────────── */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-[#12121f] border border-[#E4E4EC] dark:border-[#1e1e35] rounded-2xl p-6 text-center shadow-card">
-
+          <div
+            className="theme-surface border rounded-2xl p-6 text-center shadow-card"
+            style={{
+              background:   'var(--surface)',
+              borderColor:  'var(--border-color)',
+            }}
+          >
             {/* Avatar */}
-            <div className="w-20 h-20 bg-[#EEEDFF] dark:bg-[#a855f7]/20 border-2 border-[#5856D6]/30 dark:border-[#a855f7]/40 rounded-full flex items-center justify-center mx-auto mb-4">
-              <User className="w-10 h-10 text-[#5856D6] dark:text-[#a855f7]" />
+            <div
+              className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 border-2"
+              style={{
+                background:   'var(--accent-glow)',
+                borderColor:  'var(--accent-icon)',
+              }}
+            >
+              <User className="w-10 h-10" style={{ color: 'var(--accent-icon)' }} />
             </div>
 
-            {/* Nombre */}
-            <h2 className="font-bold text-xl text-[#0F0F14] dark:text-[#f1f0ff] mb-1">
+            <h2 className="font-bold text-xl mb-1" style={{ color: 'var(--text-primary)' }}>
               {profile?.full_name ?? user.email?.split('@')[0]}
             </h2>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              {user.email}
+            </p>
 
-            {/* Email */}
-            <p className="text-sm text-[#6B6B7B] dark:text-[#64607a]">{user.email}</p>
-
-            {/* Link admin */}
             {profile?.role === 'admin' && (
               <Link
                 href="/admin"
-                className="mt-4 inline-block px-4 py-2 bg-[#facc15]/10 border border-[#facc15]/30 text-[#a07c00] dark:text-[#facc15] text-xs font-bold rounded-full hover:bg-[#facc15]/20 transition-all"
+                className="mt-4 inline-block px-4 py-2 text-xs font-bold rounded-full transition-all"
+                style={{
+                  background:  'rgba(250,204,21,.10)',
+                  border:      '1px solid rgba(250,204,21,.30)',
+                  color:       '#c89800',
+                }}
               >
                 👑 Panel de administrador
               </Link>
@@ -75,33 +109,43 @@ export default async function ProfilePage() {
         {/* ── Stats y pedidos ─────────────────────────────────── */}
         <div className="lg:col-span-2 space-y-6">
 
-          {/* Stats cards */}
+          {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {stats.map(({ label, value, icon }) => (
               <div
                 key={label}
-                className="bg-white dark:bg-[#12121f] border border-[#E4E4EC] dark:border-[#1e1e35] rounded-xl p-4 shadow-card"
+                className="rounded-xl p-4 shadow-card border"
+                style={{
+                  background:  'var(--surface)',
+                  borderColor: 'var(--border-color)',
+                }}
               >
-                <div className="flex items-center gap-2 text-[#5856D6] dark:text-[#a855f7] mb-2">
+                <div className="flex items-center gap-2 mb-2" style={{ color: 'var(--accent-icon)' }}>
                   {icon}
                 </div>
-                <p className="text-xl font-bold text-[#0F0F14] dark:text-[#f1f0ff]">{value}</p>
-                <p className="text-xs text-[#6B6B7B] dark:text-[#64607a] mt-0.5">{label}</p>
+                <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{value}</p>
+                <p className="text-xs mt-0.5"    style={{ color: 'var(--text-muted)' }}>{label}</p>
               </div>
             ))}
           </div>
 
           {/* Últimos pedidos */}
-          <div className="bg-white dark:bg-[#12121f] border border-[#E4E4EC] dark:border-[#1e1e35] rounded-2xl p-5 shadow-card">
-
+          <div
+            className="rounded-2xl p-5 shadow-card border"
+            style={{
+              background:  'var(--surface)',
+              borderColor: 'var(--border-color)',
+            }}
+          >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-[#0F0F14] dark:text-[#f1f0ff] flex items-center gap-2">
-                <Package className="w-4 h-4 text-[#5856D6] dark:text-[#a855f7]" />
+              <h3 className="font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                <Package className="w-4 h-4" style={{ color: 'var(--accent-icon)' }} />
                 Últimos pedidos
               </h3>
               <Link
                 href="/profile/orders"
-                className="text-xs text-[#5856D6] dark:text-[#a855f7] hover:text-[#4644b8] dark:hover:text-[#c084fc] transition-colors"
+                className="text-xs font-medium transition-colors"
+                style={{ color: 'var(--accent-icon)' }}
               >
                 Ver todos →
               </Link>
@@ -109,44 +153,48 @@ export default async function ProfilePage() {
 
             {orders && orders.length > 0 ? (
               <div className="space-y-3">
-                {orders.map((order) => (
-                  <div
-                    key={order.id}
-                    className="flex items-center justify-between p-3 bg-[#F5F4FF] dark:bg-[#1a1a2e] border border-[#E4E4EC] dark:border-transparent rounded-xl"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-[#0F0F14] dark:text-[#f1f0ff]">
-                        #{order.id.slice(0, 8).toUpperCase()}
-                      </p>
-                      <p className="text-xs text-[#6B6B7B] dark:text-[#64607a]">
-                        {formatDate(order.created_at)}
-                      </p>
+                {orders.map((order) => {
+                  const s = statusStyle(order.status)
+                  return (
+                    <div
+                      key={order.id}
+                      className="flex items-center justify-between p-3 rounded-xl border"
+                      style={{
+                        background:  'var(--surface-raised)',
+                        borderColor: 'var(--border-color)',
+                      }}
+                    >
+                      <div>
+                        <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                          #{order.id.slice(0, 8).toUpperCase()}
+                        </p>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                          {formatDate(order.created_at)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold" style={{ color: 'var(--accent-icon)' }}>
+                          ${order.total.toFixed(2)}
+                        </p>
+                        <span
+                          className="text-xs px-2 py-0.5 rounded-full font-medium"
+                          style={{ background: s.bg, color: s.color }}
+                        >
+                          {statusLabel(order.status)}
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-[#5856D6] dark:text-[#a855f7]">
-                        ${order.total.toFixed(2)}
-                      </p>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${
-                        order.status === 'delivered' ? 'bg-green-100 dark:bg-[#4ade80]/10 text-green-700 dark:text-[#4ade80]' :
-                        order.status === 'shipped'   ? 'bg-blue-100  dark:bg-blue-500/10  text-blue-700  dark:text-blue-400'  :
-                        order.status === 'paid'      ? 'bg-cyan-100  dark:bg-[#22d3ee]/10  text-cyan-700  dark:text-[#22d3ee]' :
-                                                       'bg-yellow-100 dark:bg-[#facc15]/10 text-yellow-700 dark:text-[#facc15]'
-                      }`}>
-                        {order.status === 'pending'   ? 'Pendiente' :
-                         order.status === 'paid'      ? 'Pagado'    :
-                         order.status === 'shipped'   ? 'Enviado'   : 'Entregado'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             ) : (
               <div className="text-center py-8">
-                <Package className="w-10 h-10 text-[#B0B0BE] dark:text-[#64607a] mx-auto mb-3" />
-                <p className="text-[#6B6B7B] dark:text-[#64607a] text-sm">Aún no tenés pedidos</p>
+                <Package className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Aún no tenés pedidos</p>
                 <Link
                   href="/"
-                  className="mt-3 inline-block text-sm text-[#5856D6] dark:text-[#a855f7] hover:text-[#4644b8] dark:hover:text-[#c084fc] transition-colors"
+                  className="mt-3 inline-block text-sm font-medium transition-colors"
+                  style={{ color: 'var(--accent-icon)' }}
                 >
                   ¡Empezar a comprar! →
                 </Link>
