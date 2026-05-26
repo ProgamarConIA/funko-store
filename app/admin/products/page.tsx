@@ -2,6 +2,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import type { Metadata } from 'next'
 import { Package } from 'lucide-react'
 import EditableProductRow from './EditableProductRow'
+import CurrencySelector from './CurrencySelector'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Admin — Productos' }
@@ -26,7 +27,7 @@ export default async function AdminProductsPage() {
           <h1 className="text-2xl font-bold text-[#0F0F14]">Productos</h1>
           <p className="text-[#6B6B7B] text-sm mt-1">{total} productos en total</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap justify-end">
           {sinStock > 0 && (
             <span className="text-xs px-3 py-1.5 bg-red-50 text-red-500 border border-red-200 rounded-full font-semibold">
               {sinStock} sin stock
@@ -37,6 +38,8 @@ export default async function AdminProductsPage() {
               {bajStock} stock bajo
             </span>
           )}
+          {/* Selector de moneda */}
+          <CurrencySelector />
         </div>
       </div>
 
@@ -52,7 +55,7 @@ export default async function AdminProductsPage() {
           <table className="w-full text-sm min-w-[760px]">
             <thead>
               <tr className="bg-[#FAFAFA] border-b border-[#E4E4EC]">
-                {['Producto', 'Franquicia', 'Categoría', 'Precio (€)', 'Stock', 'Estado', 'Acciones'].map((h) => (
+                {['Producto', 'Franquicia', 'Categoría', 'Precio', 'Stock', 'Estado', 'Acciones'].map((h) => (
                   <th key={h} className="text-left px-4 py-3 text-[10px] font-semibold text-[#B0B0BE] uppercase tracking-widest">
                     {h}
                   </th>

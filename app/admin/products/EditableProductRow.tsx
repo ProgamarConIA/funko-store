@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Save, Check, AlertCircle, Loader2, Pencil } from 'lucide-react'
 import { DEFAULT_PRODUCT_IMAGE } from '@/lib/utils'
 import EditProductModal, { type AdminProduct } from './EditProductModal'
 import ToastNotification from './ToastNotification'
+import { getCurrencyInfo, CURRENCY_LS_KEY } from './CurrencySelector'
 
 interface Product {
   id: string
@@ -38,6 +39,23 @@ export default function EditableProductRow({ product: initialProduct }: { produc
   const [status, setStatus] = useState<'idle' | 'loading' | 'saved' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [imgError, setImgError] = useState(false)
+
+  // ── Moneda seleccionada en el panel admin ──
+  const [currencyCode, setCurrencyCode] = useState('EUR')
+
+  useEffect(() => {
+    // Leer valor inicial de localStorage
+    setCurrencyCode(localStorage.getItem(CURRENCY_LS_KEY) ?? 'EUR')
+
+    // Escuchar cambios del selector de moneda (CurrencySelector dispara este evento)
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === CURRENCY_LS_KEY && e.newValue) {
+        setCurrencyCode(e.newValue)
+      }
+    }
+    window.addEventListener('storage', handleStorage)
+    return () => window.removeEventListener('storage', handleStorage)
+  }, [])
 
   // ── Estado modal de edición completa ──
   const [showEditModal, setShowEditModal] = useState(false)
@@ -141,7 +159,7 @@ export default function EditableProductRow({ product: initialProduct }: { produc
         {/* Precio editable */}
         <td className="px-4 py-3">
           <div className="flex items-center gap-1">
-            <span className="text-xs text-[#6B6B7B]">€</span>
+            <span className="text-xs text-[#6B6B7B]">{getCurrencyInfo(currencyCode).symbol}</span>
             <input
               type="number"
               value={price}
