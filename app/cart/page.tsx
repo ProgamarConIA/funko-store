@@ -1,7 +1,8 @@
 'use client'
 
 import { useCartStore } from '@/store/cartStore'
-import { formatPrice, DEFAULT_PRODUCT_IMAGE } from '@/lib/utils'
+import { DEFAULT_PRODUCT_IMAGE } from '@/lib/utils'
+import PriceDisplay from '@/components/ui/PriceDisplay'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react'
@@ -60,7 +61,7 @@ export default function CartPage() {
                   </h3>
                 </Link>
                 <p className="text-xs text-[#64607a] mt-0.5">{product.franchise} · {product.character}</p>
-                <p className="text-lg font-bold text-[#a855f7] mt-2">{formatPrice(product.price)}</p>
+                <PriceDisplay priceEUR={product.price} className="text-lg font-bold text-[#a855f7] mt-2" />
               </div>
 
               <div className="flex flex-col items-end justify-between">
@@ -69,9 +70,10 @@ export default function CartPage() {
                 </button>
 
                 <div>
-                  <p className="text-sm font-bold text-[#f1f0ff] text-right mb-2">
-                    {formatPrice(product.price * quantity)}
-                  </p>
+                  <PriceDisplay
+                    priceEUR={product.price * quantity}
+                    className="text-sm font-bold text-[#f1f0ff] text-right mb-2"
+                  />
                   <div className="flex items-center gap-2 bg-[#1a1a2e] rounded-lg px-3 py-1.5">
                     <button onClick={() => updateQuantity(product.id, quantity - 1)} className="text-[#64607a] hover:text-[#f1f0ff] transition-colors">
                       <Minus className="w-3 h-3" />
@@ -102,7 +104,7 @@ export default function CartPage() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-[#a09dbd]">
                 <span>Subtotal ({items.reduce((a, i) => a + i.quantity, 0)} items)</span>
-                <span>{formatPrice(totalPrice())}</span>
+                <PriceDisplay priceEUR={totalPrice()} />
               </div>
               <div className="flex justify-between text-[#a09dbd]">
                 <span>Envío</span>
@@ -110,7 +112,7 @@ export default function CartPage() {
               </div>
               <div className="border-t border-[#1e1e35] pt-3 flex justify-between font-bold text-[#f1f0ff] text-base">
                 <span>Total</span>
-                <span>{formatPrice(totalPrice())}</span>
+                <PriceDisplay priceEUR={totalPrice()} />
               </div>
             </div>
 

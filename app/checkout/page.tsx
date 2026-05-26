@@ -2,9 +2,9 @@
 
 import { useRef, useState } from 'react'
 import { useCartStore } from '@/store/cartStore'
-import { formatPrice } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import PriceDisplay from '@/components/ui/PriceDisplay'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import { CreditCard, MapPin, Lock, CheckCircle } from 'lucide-react'
@@ -153,7 +153,7 @@ export default function CheckoutPage() {
                 )}
 
                 <Button onClick={handleOrder} loading={loading} className="w-full" size="lg" icon={<Lock className="w-4 h-4" />}>
-                  {loading ? 'Procesando...' : `Confirmar — ${formatPrice(total)}`}
+                  {loading ? 'Procesando...' : <span>Confirmar — <PriceDisplay priceEUR={total} /></span>}
                 </Button>
                 <button onClick={() => setStep('shipping')} className="w-full text-sm text-[#6B6B7B] hover:text-[#0F0F14] transition-colors">
                   ← Volver al envío
@@ -176,21 +176,22 @@ export default function CheckoutPage() {
                       <p className="text-xs font-semibold text-[#0F0F14] line-clamp-1">{product.name}</p>
                       <p className="text-xs text-[#6B6B7B]">x{quantity}</p>
                     </div>
-                    <p className="text-xs font-bold text-[#5856D6] whitespace-nowrap">
-                      {formatPrice(product.price * quantity)}
-                    </p>
+                    <PriceDisplay
+                      priceEUR={product.price * quantity}
+                      className="text-xs font-bold text-[#5856D6] whitespace-nowrap"
+                    />
                   </div>
                 ))}
               </div>
               <div className="border-t border-[#E4E4EC] pt-3 space-y-2 text-sm">
                 <div className="flex justify-between text-[#6B6B7B]">
-                  <span>Subtotal</span><span>{formatPrice(total)}</span>
+                  <span>Subtotal</span><PriceDisplay priceEUR={total} />
                 </div>
                 <div className="flex justify-between text-green-600 font-medium">
                   <span>Envío</span><span>Gratis</span>
                 </div>
                 <div className="flex justify-between font-bold text-[#0F0F14] text-base pt-1">
-                  <span>Total</span><span>{formatPrice(total)}</span>
+                  <span>Total</span><PriceDisplay priceEUR={total} className="font-bold text-[#0F0F14] text-base" />
                 </div>
               </div>
             </div>

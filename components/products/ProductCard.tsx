@@ -4,7 +4,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ShoppingCart, Check } from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
-import { formatPrice, DEFAULT_PRODUCT_IMAGE } from '@/lib/utils'
+import { DEFAULT_PRODUCT_IMAGE } from '@/lib/utils'
+import PriceDisplay from '@/components/ui/PriceDisplay'
 import type { Product } from '@/lib/types'
 import { useState } from 'react'
 
@@ -100,9 +101,10 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           <div className="flex items-center justify-between gap-2">
             <div>
-              <p className="text-base font-bold text-[#0F0F14] dark:text-[#f1f0ff]">
-                {formatPrice(product.price)}
-              </p>
+              <PriceDisplay
+                priceEUR={product.price}
+                className="text-base font-bold text-[#0F0F14] dark:text-[#f1f0ff]"
+              />
               {product.stock <= 5 && product.stock > 0 && (
                 <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium mt-0.5">
                   ¡Solo {product.stock} restantes!

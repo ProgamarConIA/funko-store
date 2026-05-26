@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ShoppingCart, User, Menu, X, LogOut } from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
 import { createClient } from '@/lib/supabase/client'
+import CurrencySelector from '@/components/ui/CurrencySelector'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
@@ -97,7 +98,10 @@ export default function Navbar() {
           </div>
 
           {/* Acciones */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+
+            {/* Selector de moneda */}
+            <CurrencySelector />
 
             {/* Carrito */}
             <button

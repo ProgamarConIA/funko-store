@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import { formatPrice, DEFAULT_PRODUCT_IMAGE } from '@/lib/utils'
+import { DEFAULT_PRODUCT_IMAGE } from '@/lib/utils'
+import PriceDisplay from '@/components/ui/PriceDisplay'
 import type { Product } from '@/lib/types'
 import AddToCartButton from './AddToCartButton'
 import ProductImage from './ProductImage'
@@ -96,9 +97,10 @@ export default async function ProductPage({ params }: PageProps) {
             {/* Precio */}
             <div className="py-5 border-y border-[#E4E4EC]">
               <p className="text-xs text-[#B0B0BE] font-medium mb-1 uppercase tracking-wide">Precio</p>
-              <span className="text-4xl font-bold text-[#0F0F14]">
-                {formatPrice(product.price)}
-              </span>
+              <PriceDisplay
+                priceEUR={product.price}
+                className="text-4xl font-bold text-[#0F0F14]"
+              />
             </div>
 
             {/* Stock */}
@@ -186,7 +188,7 @@ export default async function ProductPage({ params }: PageProps) {
                   <p className="text-xs font-semibold text-[#0F0F14] line-clamp-2 group-hover:text-[#5856D6] transition-colors">
                     {p.name}
                   </p>
-                  <p className="text-sm font-bold text-[#0F0F14] mt-1.5">{formatPrice(p.price)}</p>
+                  <PriceDisplay priceEUR={p.price} className="text-sm font-bold text-[#0F0F14] mt-1.5" />
                 </Link>
               ))}
             </div>
