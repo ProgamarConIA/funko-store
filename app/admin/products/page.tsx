@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: 'Admin — Productos' }
 export default async function AdminProductsPage() {
   const { data: products } = await supabaseAdmin
     .from('products')
-    .select('id, name, character, franchise, category, price, stock, image_url')
+    .select('id, name, character, franchise, category, price, stock, image_url, description')
     .order('franchise', { ascending: true })
     .order('name',      { ascending: true })
 
@@ -45,14 +45,14 @@ export default async function AdminProductsPage() {
         <div className="flex items-center gap-2 px-5 py-4 border-b border-[#E4E4EC]">
           <Package className="w-4 h-4 text-[#5856D6]" />
           <span className="text-sm font-semibold text-[#0F0F14]">Catálogo de productos</span>
-          <span className="ml-auto text-xs text-[#6B6B7B]">Edita precio y stock directamente en la tabla</span>
+          <span className="ml-auto text-xs text-[#6B6B7B]">Edita precio, stock, nombre, descripción e imagen directamente</span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[760px]">
             <thead>
               <tr className="bg-[#FAFAFA] border-b border-[#E4E4EC]">
-                {['Producto', 'Franquicia', 'Categoría', 'Precio (€)', 'Stock', 'Estado', 'Guardar'].map((h) => (
+                {['Producto', 'Franquicia', 'Categoría', 'Precio (€)', 'Stock', 'Estado', 'Acciones'].map((h) => (
                   <th key={h} className="text-left px-4 py-3 text-[10px] font-semibold text-[#B0B0BE] uppercase tracking-widest">
                     {h}
                   </th>

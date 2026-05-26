@@ -3,6 +3,9 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { LayoutDashboard, Package, ShoppingBag, ArrowLeft, Shield } from 'lucide-react'
 
+// El admin panel requiere autenticación → nunca pre-renderizar estáticamente
+export const dynamic = 'force-dynamic'
+
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? ''
 
 const NAV = [
