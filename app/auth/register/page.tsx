@@ -9,8 +9,15 @@ import Button from '@/components/ui/Button'
 import { Mail, Lock, User, CheckCircle, AlertCircle } from 'lucide-react'
 
 export default function RegisterPage() {
-  // Cliente Supabase estable
-  const supabase = useRef(createClient()).current
+  // Cliente Supabase: inicializado solo en el cliente para evitar que
+  // createBrowserClient acceda a `location` durante el SSR de Next.js.
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
+  if (typeof window !== 'undefined' && !supabaseRef.current) {
+    supabaseRef.current = createClient()
+  }
+  // El operador ! es seguro: los handlers solo se ejecutan en el navegador,
+  // donde supabaseRef.current ya fue inicializado por la condición anterior.
+  const supabase = supabaseRef.current!
 
   const [form, setForm]       = useState({ full_name: '', email: '', password: '', confirm: '' })
   const [loading, setLoading] = useState(false)

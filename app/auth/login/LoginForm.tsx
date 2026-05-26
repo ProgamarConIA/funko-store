@@ -10,9 +10,15 @@ import Button from '@/components/ui/Button'
 import { Mail, Lock, AlertCircle, MailCheck } from 'lucide-react'
 
 export default function LoginForm() {
-  // Cliente Supabase estable (createBrowserClient es singleton internamente,
-  // pero useRef garantiza que no se recree en cada render)
-  const supabase = useRef(createClient()).current
+  // Cliente Supabase: inicializado solo en el cliente para evitar que
+  // createBrowserClient acceda a `location` durante el SSR de Next.js.
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
+  if (typeof window !== 'undefined' && !supabaseRef.current) {
+    supabaseRef.current = createClient()
+  }
+  // El operador ! es seguro: los handlers solo se ejecutan en el navegador,
+  // donde supabaseRef.current ya fue inicializado por la condición anterior.
+  const supabase = supabaseRef.current!
 
   const searchParams  = useSearchParams()
   const redirect      = searchParams.get('redirect') ?? '/'

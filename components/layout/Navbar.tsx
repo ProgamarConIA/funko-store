@@ -31,16 +31,23 @@ export default function Navbar() {
   // Ref para evitar setState innecesarios en cada frame de scroll
   const scrolledRef = useRef(false)
 
-  // Supabase client estable: lazy initializer garantiza que se cree solo una vez
-  const [supabase] = useState<SupabaseClient>(() => createClient())
+  // Supabase client: inicializado solo en el cliente para evitar que
+  // createBrowserClient (de @supabase/ssr) acceda a `location` durante
+  // el SSR de Next.js. useRef garantiza una única instancia por montaje.
+  const supabaseRef = useRef<SupabaseClient | null>(null)
+  if (typeof window !== 'undefined' && !supabaseRef.current) {
+    supabaseRef.current = createClient()
+  }
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user))
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    const client = supabaseRef.current
+    if (!client) return
+    client.auth.getUser().then(({ data }) => setUser(data.user))
+    const { data: { subscription } } = client.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null)
     })
     return () => subscription.unsubscribe()
-  }, [supabase])
+  }, [])  // [] correcto: supabaseRef.current es estable durante el ciclo de vida
 
   useEffect(() => {
     const onScroll = () => {
@@ -57,7 +64,7 @@ export default function Navbar() {
   }, [])
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
+    await supabaseRef.current?.auth.signOut()
     window.location.href = '/'
   }
 

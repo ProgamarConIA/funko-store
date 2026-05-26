@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useCartStore } from '@/store/cartStore'
 import { formatPrice } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
@@ -15,7 +15,12 @@ import type { ShippingAddress } from '@/lib/types'
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCartStore()
   const router = useRouter()
-  const supabase = createClient()
+  // Inicializado solo en el cliente para evitar que createBrowserClient
+  // acceda a `location` durante el SSR de Next.js.
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
+  if (typeof window !== 'undefined' && !supabaseRef.current) {
+    supabaseRef.current = createClient()
+  }
   const [step, setStep] = useState<'shipping' | 'payment'>('shipping')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -35,7 +40,7 @@ export default function CheckoutPage() {
     setLoading(true)
     setError('')
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user } } = await supabaseRef.current!.auth.getUser()
       if (!user) { router.push('/auth/login?redirect=/checkout'); return }
 
       const res = await fetch('/api/orders', {

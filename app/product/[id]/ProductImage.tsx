@@ -21,6 +21,7 @@ export default function ProductImage({
       className="object-contain p-10"
       sizes="(max-width: 1024px) 100vw, 50vw"
       priority
+      quality={100}
       onError={() => setImgSrc(DEFAULT_PRODUCT_IMAGE)}
     />
   )
