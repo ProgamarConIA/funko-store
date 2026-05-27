@@ -51,7 +51,17 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Fallo: redirigir al login con mensaje de error
+  // Fallo: redirigir a la página correcta según el flow que originó el link
+  const isRecovery = next.includes('/auth/reset-password')
+
+  if (isRecovery) {
+    // Link de recuperación expirado/ya usado → volver a forgot-password
+    const errorUrl = new URL('/auth/forgot-password', origin)
+    errorUrl.searchParams.set('error', 'El link de recuperación expiró o ya fue usado. Solicitá uno nuevo.')
+    return NextResponse.redirect(errorUrl)
+  }
+
+  // Link de confirmación de signup expirado/ya usado → login
   const errorUrl = new URL('/auth/login', origin)
   errorUrl.searchParams.set('error', 'El link de confirmación expiró o ya fue usado. Intentá registrarte de nuevo.')
   return NextResponse.redirect(errorUrl)

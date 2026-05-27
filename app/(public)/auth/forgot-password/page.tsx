@@ -25,6 +25,13 @@ export default function ForgotPasswordPage() {
   const [cooldown, setCooldown] = useState(0)
   const inFlight = useRef(false)
 
+  // Leer error pasado por el callback de Supabase (ej: link de recovery expirado)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const urlError = params.get('error')
+    if (urlError) setError(urlError)
+  }, [])
+
   // Countdown del cooldown
   useEffect(() => {
     if (cooldown <= 0) return
