@@ -45,9 +45,8 @@ El SMTP compartido de Supabase tiene deliverability pésima:
 ### Opción recomendada: Resend.com (gratuito hasta 3.000 emails/mes)
 
 1. Crear cuenta en [resend.com](https://resend.com)
-2. Agregar y verificar tu dominio (requiere agregar registros DNS)
-3. Crear un API Key en Resend
-4. En Supabase Dashboard → **Project Settings → Auth → SMTP Settings**:
+2. Crear un API Key en Resend
+3. En Supabase Dashboard → **Project Settings → Auth → SMTP Settings**:
 
 ```
 Enable Custom SMTP: ✅
@@ -55,9 +54,26 @@ Host:               smtp.resend.com
 Port:               465
 Username:           resend
 Password:           re_xxxxx  ← tu API key de Resend
-Sender email:       noreply@tu-dominio.com
+Sender email:       VER TABLA ABAJO  ← ⚠️ crítico
 Sender name:        FunkoStore
 ```
+
+#### ⚠️ CRÍTICO — Dirección de envío (Sender email) en Resend
+
+Resend NO permite usar cualquier dirección `@resend.dev` como remitente.
+Solo funcionan estas dos opciones:
+
+| Situación | Sender email | Notas |
+|-----------|-------------|-------|
+| **Testing / desarrollo** | `onboarding@resend.dev` | Pre-autorizado por Resend. Envía a cualquier email. |
+| **Producción** | `noreply@tu-dominio.com` | Requiere verificar tu dominio en Resend primero. |
+
+> ❌ **`noreply@resend.dev` NO funciona** — Resend rechaza el envío y
+> Supabase devuelve `"Error sending confirmation email"`, lo cual bloquea
+> el registro de nuevos usuarios.
+
+**Para producción:** Agregar y verificar tu dominio en Resend Dashboard → Domains,
+luego cambiar el `Sender email` a `noreply@tu-dominio.com`.
 
 ### Otras opciones válidas
 

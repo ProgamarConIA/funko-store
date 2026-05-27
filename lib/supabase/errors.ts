@@ -79,9 +79,16 @@ export function translateAuthError(message: string): string {
   }
 
   // ── Errores de entrega de email (SMTP / proveedor externo) ────
-  // Se detectan cuando Supabase propaga errores del SMTP personalizado
-  // (ej: Resend con API key inválida, dominio no verificado, cuota agotada).
-  // Van ANTES del fallback genérico para dar un mensaje más útil.
+  // Se detectan cuando Supabase/GoTrue propaga errores del SMTP personalizado.
+  //
+  // ⚠️ IMPORTANTE — "error sending" es el mensaje INTERNO de GoTrue cuando
+  // la entrega falla por cualquier motivo (config incorrecta, API key inválida,
+  // dominio no verificado en Resend, etc.). NO indica un problema con el email
+  // del usuario — el problema es siempre del lado del servidor.
+  //
+  // El mensaje NO debe culpar al usuario ("verificá tu dirección"):
+  // la causa más común es configuración SMTP incorrecta (ej: usar
+  // noreply@resend.dev en lugar de onboarding@resend.dev o dominio propio).
   if (
     m.includes('error sending') ||
     m.includes('failed to send') ||
@@ -96,7 +103,7 @@ export function translateAuthError(message: string): string {
       m.includes('forbidden')
     ))
   ) {
-    return 'No se pudo enviar el email. Verificá que la dirección sea válida e intentá en unos minutos.'
+    return 'No se pudo enviar el email de verificación. Por favor intentá de nuevo en unos minutos.'
   }
 
   // ── Registro deshabilitado ───────────────────────────────────
