@@ -151,19 +151,15 @@ export default function RegisterPage() {
       }
 
       // ── Respuesta exitosa de Supabase ──────────────────────────
-      if (!data.user) {
-        setError('No se pudo crear la cuenta. Intentá de nuevo.')
-        setLoading(false)
-        return
-      }
-
-      // identities vacío o inexistente = email ya confirmado en Supabase
-      // (Supabase retorna el "ghost user" con identities: [] para no revelar
-      //  si el email existe, pero el campo es distinguible)
-      if (!data.user.identities?.length) {
+      //
+      // Supabase señala "email ya registrado" de dos formas según versión:
+      //   a) data.user === null (sin error explícito)
+      //   b) data.user existe pero identities: [] (ghost user)
+      // Ambos casos = el email ya tiene una cuenta → mismo mensaje claro.
+      if (!data.user || !data.user.identities?.length) {
         setError(
-          'Ya existe una cuenta con este email. ' +
-          'Iniciá sesión o usá "¿Olvidaste tu contraseña?" para recuperarla.'
+          'Este email ya tiene una cuenta creada. ' +
+          'Iniciá sesión o usá "¿Olvidaste tu contraseña?" para recuperar el acceso.'
         )
         setLoading(false)
         return
