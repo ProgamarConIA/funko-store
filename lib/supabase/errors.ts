@@ -30,7 +30,11 @@ export function translateAuthError(message: string): string {
   }
 
   // ── Rate limit general (demasiadas requests) ─────────────────
-  if (m.includes('over_request_rate_limit') || m.includes('request rate limit')) {
+  if (
+    m.includes('over_request_rate_limit') ||
+    m.includes('request rate limit') ||
+    m.includes('too many requests')
+  ) {
     return 'Demasiadas solicitudes. Esperá unos segundos e intentá de nuevo.'
   }
 
@@ -74,4 +78,44 @@ export function translateAuthError(message: string): string {
 
   // ── Fallback: devolver el mensaje original sin exponer técnico ──
   return 'Ocurrió un error. Intentá de nuevo en unos momentos.'
+}
+
+// ─── Helpers para detectar tipos de error ────────────────────────────────────
+
+/**
+ * Devuelve true si el mensaje es un rate-limit de cualquier tipo.
+ * Se usa para sobrescribir el mensaje genérico en contextos específicos
+ * (ej: registro) donde el rate-limit suele indicar un email inválido.
+ */
+export function isRateLimitError(message: string): boolean {
+  const m = message.toLowerCase()
+  return (
+    m.includes('over_email_send_rate_limit') ||
+    m.includes('over_request_rate_limit') ||
+    m.includes('email rate limit') ||
+    m.includes('request rate limit') ||
+    m.includes('too many requests') ||
+    m.includes('rate limit') ||
+    m.includes('throttl')   // throttled / throttling
+  )
+}
+
+/**
+ * Versión especializada de translateAuthError para el flujo de REGISTRO.
+ *
+ * Diferencias respecto a translateAuthError:
+ *   - Rate limits → mensaje orienta al usuario a usar un email real,
+ *     porque en registro suelen ocurrir cuando se intenta varias veces
+ *     con un email falso o inexistente (Supabase envía el email de
+ *     confirmación y luego limita los envíos).
+ *   - El resto de errores se delega a translateAuthError.
+ */
+export function translateSignUpError(message: string): string {
+  if (isRateLimitError(message)) {
+    return (
+      'No pudimos completar el registro con este email. ' +
+      'Asegurate de usar un correo real al que tengas acceso.'
+    )
+  }
+  return translateAuthError(message)
 }

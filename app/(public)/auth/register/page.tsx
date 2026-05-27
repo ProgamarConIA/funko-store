@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { translateAuthError } from '@/lib/supabase/errors'
+import { translateSignUpError } from '@/lib/supabase/errors'
 import { validateEmail } from '@/lib/emailValidation'
 import Link from 'next/link'
 import Input from '@/components/ui/Input'
@@ -76,7 +76,7 @@ export default function RegisterPage() {
       })
 
       if (authError) {
-        setError(translateAuthError(authError.message))
+        setError(translateSignUpError(authError.message))
         setLoading(false)
         return
       }
