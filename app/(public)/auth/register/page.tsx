@@ -221,7 +221,10 @@ export default function RegisterPage() {
       // Supabase señala "email ya registrado" de dos formas según versión:
       //   a) data.user === null (sin error explícito)
       //   b) data.user existe pero identities: [] (ghost user)
-      if (!data.user || !data.user.identities?.length) {
+      // Supabase signals existing CONFIRMED email with identities: []
+      // When data.user is null, some Supabase configs omit it on email-confirm-required —
+      // that is a NEW user, so we must NOT show duplicate message in that case.
+      if (Array.isArray(data.user?.identities) && data.user!.identities.length === 0) {
         setIsDuplicateEmail(true)
         setError('')
         setLoading(false)

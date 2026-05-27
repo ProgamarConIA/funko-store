@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
     return () => clearTimeout(t)
   }, [cooldown])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: { preventDefault(): void }) => {
     e.preventDefault()
     if (inFlight.current || loading || cooldown > 0) return
     inFlight.current = true
@@ -47,6 +47,27 @@ export default function ForgotPasswordPage() {
     setLoading(true)
 
     try {
+      // Verify the email has a registered account before sending.
+      // resetPasswordForEmail() doesn't reveal non-existent emails (privacy),
+      // so we check via a server-side admin lookup first.
+      try {
+        const res = await fetch('/api/auth/email-exists', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ email: email.trim().toLowerCase() }),
+        })
+        if (res.ok) {
+          const { exists } = await res.json()
+          if (!exists) {
+            setError('No hay ninguna cuenta registrada con este email.')
+            return
+          }
+        }
+        // If fetch fails, continue anyway — don't block legitimate users
+      } catch {
+        // Network error → continue with recovery attempt
+      }
+
       const { error: authError } = await supabase.auth.resetPasswordForEmail(
         email.trim().toLowerCase(),
         {

@@ -1,49 +1,60 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { translateAuthError } from '@/lib/supabase/errors'
+import { translateAuthError, isRateLimitError } from '@/lib/supabase/errors'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
-import { Mail, Lock, AlertCircle, MailCheck } from 'lucide-react'
+import OTPInput from '@/components/ui/OTPInput'
+import { Mail, Lock, AlertCircle, RefreshCw, Info } from 'lucide-react'
 
 export default function LoginForm() {
-  // Cliente Supabase: inicializado solo en el cliente para evitar que
-  // createBrowserClient acceda a `location` durante el SSR de Next.js.
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
   if (typeof window !== 'undefined' && !supabaseRef.current) {
     supabaseRef.current = createClient()
   }
-  // El operador ! es seguro: los handlers solo se ejecutan en el navegador,
-  // donde supabaseRef.current ya fue inicializado por la condición anterior.
   const supabase = supabaseRef.current!
 
   const searchParams  = useSearchParams()
   const redirect      = searchParams.get('redirect') ?? '/'
-  const callbackError = searchParams.get('error') // viene del callback de confirmación
+  const callbackError = searchParams.get('error')
 
+  // ── Login form state ──────────────────────────────────────────────────────
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState(callbackError ?? '')
-  // Flag ref para evitar doble-submit incluso en el mismo tick de render
   const inFlight = useRef(false)
 
-  // Detectar si el error es de "email no confirmado" para mostrar CTA de reenvío
   const isUnconfirmed = error.toLowerCase().includes('confirmar')
-  const [resending, setResending]   = useState(false)
-  const [resendDone, setResendDone] = useState(false)
+  const [resending, setResending] = useState(false)
+
+  // ── OTP state (shown after successful resend confirmation) ────────────────
+  const [pendingOtpEmail, setPendingOtpEmail]       = useState('')
+  const [otpSent, setOtpSent]                       = useState(false)
+  const [otpPreviouslySent, setOtpPreviouslySent]   = useState(false)
+  const [otpError, setOtpError]                     = useState('')
+  const [otpLoading, setOtpLoading]                 = useState(false)
+  const [otpKey, setOtpKey]                         = useState(0)
+  const [resendCooldown, setResendCooldown]         = useState(0)
+  const [resendLoading, setResendLoading]           = useState(false)
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return
+    const t = setTimeout(() => setResendCooldown(c => c - 1), 1_000)
+    return () => clearTimeout(t)
+  }, [resendCooldown])
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (inFlight.current || loading) return   // doble-click guard
+    if (inFlight.current || loading) return
     inFlight.current = true
-
     setLoading(true)
     setError('')
-    setResendDone(false)
 
     try {
       const { error: authError } = await supabase.auth.signInWithPassword({
@@ -55,33 +66,186 @@ export default function LoginForm() {
         setError(translateAuthError(authError.message))
         setLoading(false)
       } else {
-        // Recarga completa para que el servidor reciba la sesión correctamente
-        // (el middleware actualiza las cookies en el primer request post-login)
         window.location.href = redirect
-        // Nota: no ponemos setLoading(false) aquí a propósito —
-        // el spinner sigue mientras navega para indicar que algo está pasando
       }
     } finally {
       inFlight.current = false
     }
   }
 
+  // Triggered by "Reenviar email de confirmación" — only shown when login
+  // returns email_not_confirmed, which means the user EXISTS but is unconfirmed.
   const handleResend = async () => {
     if (resending || !email) return
     setResending(true)
+    const normalizedEmail = email.trim().toLowerCase()
+
     const { error: resendError } = await supabase.auth.resend({
       type:  'signup',
-      email: email.trim().toLowerCase(),
+      email: normalizedEmail,
     })
     setResending(false)
-    if (!resendError) {
-      setResendDone(true)
+
+    if (!resendError || isRateLimitError(resendError.message)) {
+      // Code sent or already active → transition to OTP screen
+      setPendingOtpEmail(normalizedEmail)
+      setOtpPreviouslySent(!!resendError && isRateLimitError(resendError.message))
+      setOtpSent(true)
       setError('')
+      setResendCooldown(60)
     } else {
       setError(translateAuthError(resendError.message))
     }
   }
 
+  const handleVerifyOTP = async (code: string) => {
+    if (otpLoading) return
+    setOtpLoading(true)
+    setOtpError('')
+
+    const { error } = await supabase.auth.verifyOtp({
+      email: pendingOtpEmail,
+      token: code,
+      type:  'signup',
+    })
+
+    if (error) {
+      const m = error.message.toLowerCase()
+      setOtpError(
+        m.includes('expired')
+          ? 'El código expiró. Solicitá uno nuevo haciendo click en "Reenviar código".'
+          : isRateLimitError(error.message)
+            ? 'Demasiados intentos. Esperá un momento antes de volver a intentar.'
+            : 'Código incorrecto. Verificá los dígitos e intentá de nuevo.'
+      )
+      setOtpKey(k => k + 1)
+      setOtpLoading(false)
+      return
+    }
+
+    // Account confirmed → navigate
+    window.location.href = redirect
+  }
+
+  const handleOtpResend = async () => {
+    if (resendCooldown > 0 || resendLoading) return
+    setResendLoading(true)
+    setOtpError('')
+
+    const { error } = await supabase.auth.resend({
+      type:  'signup',
+      email: pendingOtpEmail,
+    })
+    setResendLoading(false)
+
+    if (error) {
+      if (isRateLimitError(error.message)) {
+        setOtpError('El código anterior sigue activo. Esperá 1 minuto antes de pedir otro.')
+        setResendCooldown(60)
+      } else {
+        setOtpError(translateAuthError(error.message))
+      }
+    } else {
+      setOtpKey(k => k + 1)
+      setOtpPreviouslySent(false)
+      setResendCooldown(60)
+    }
+  }
+
+  // ── OTP verification screen ───────────────────────────────────────────────
+  if (otpSent) {
+    return (
+      <>
+        <div className="bg-white border border-[#E4E4EC] rounded-2xl p-8 shadow-card space-y-6">
+
+          <div className="text-center space-y-3">
+            <div className="flex justify-center">
+              <div className="w-14 h-14 bg-[#F5F4FF] border border-[#DDDCFF] rounded-2xl flex items-center justify-center">
+                <Mail className="w-7 h-7 text-[#5856D6]" />
+              </div>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-[#0F0F14]">Verificá tu email</h2>
+              <p className="text-[#6B6B7B] text-sm mt-1.5">
+                {otpPreviouslySent ? 'Ya enviamos un código a' : 'Enviamos un código de 8 dígitos a'}
+              </p>
+              <p className="font-semibold text-[#0F0F14] text-sm mt-0.5 break-all">
+                {pendingOtpEmail}
+              </p>
+            </div>
+          </div>
+
+          {otpPreviouslySent && !otpError && (
+            <div className="flex items-start gap-2.5 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm">
+              <Info className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>Ingresá el código que ya recibiste. Si no llegó, esperá 1 minuto para reenviar.</span>
+            </div>
+          )}
+
+          <OTPInput
+            key={otpKey}
+            length={8}
+            onComplete={handleVerifyOTP}
+            loading={otpLoading}
+            hasError={!!otpError}
+          />
+
+          {otpLoading && (
+            <div className="flex items-center justify-center gap-2 text-[#6B6B7B] text-sm">
+              <div className="w-4 h-4 border-2 border-[#5856D6] border-t-transparent rounded-full animate-spin" />
+              <span>Verificando...</span>
+            </div>
+          )}
+
+          {otpError && (
+            <div className="flex items-start gap-2.5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{otpError}</span>
+            </div>
+          )}
+
+          <p className="text-center text-xs text-[#B0B0BE]">
+            El código vence en 10 minutos · Revisá también spam
+          </p>
+
+          <div className="text-center space-y-1.5">
+            <p className="text-sm text-[#6B6B7B]">¿No llegó el código?</p>
+            <button
+              onClick={handleOtpResend}
+              disabled={resendCooldown > 0 || resendLoading}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#5856D6] hover:text-[#4644b8] disabled:text-[#B0B0BE] disabled:cursor-not-allowed transition-colors"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${resendLoading ? 'animate-spin' : ''}`} />
+              {resendCooldown > 0
+                ? `Reenviar en ${resendCooldown}s`
+                : resendLoading
+                  ? 'Enviando...'
+                  : 'Reenviar código'}
+            </button>
+          </div>
+
+          <div className="pt-3 border-t border-[#F0EFF8] text-center">
+            <button
+              onClick={() => { setOtpSent(false); setOtpError(''); setOtpKey(k => k + 1) }}
+              className="text-xs text-[#B0B0BE] hover:text-[#6B6B7B] transition-colors"
+            >
+              ← Volver al login
+            </button>
+          </div>
+
+        </div>
+
+        <p className="text-center text-sm text-[#6B6B7B] mt-5">
+          ¿No tenés cuenta?{' '}
+          <Link href="/auth/register" className="text-[#5856D6] hover:text-[#4644b8] font-semibold transition-colors">
+            Registrarse gratis
+          </Link>
+        </p>
+      </>
+    )
+  }
+
+  // ── Login form ─────────────────────────────────────────────────────────────
   return (
     <>
       <form
@@ -121,7 +285,7 @@ export default function LoginForm() {
           </div>
         </div>
 
-        {/* ── Error genérico ── */}
+        {/* Error genérico */}
         {error && !isUnconfirmed && (
           <div className="flex items-start gap-2.5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
             <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -129,7 +293,7 @@ export default function LoginForm() {
           </div>
         )}
 
-        {/* ── Error específico: email sin confirmar + botón de reenvío ── */}
+        {/* Email sin confirmar — ofrece reenviar y abrir OTP */}
         {error && isUnconfirmed && (
           <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm space-y-2">
             <div className="flex items-start gap-2.5 text-amber-700">
@@ -144,14 +308,6 @@ export default function LoginForm() {
             >
               {resending ? 'Enviando...' : 'Reenviar email de confirmación'}
             </button>
-          </div>
-        )}
-
-        {/* ── Confirmación de reenvío exitoso ── */}
-        {resendDone && (
-          <div className="flex items-start gap-2.5 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
-            <MailCheck className="w-4 h-4 mt-0.5 shrink-0" />
-            <span>Email de confirmación reenviado. Revisá tu bandeja de entrada.</span>
           </div>
         )}
 
