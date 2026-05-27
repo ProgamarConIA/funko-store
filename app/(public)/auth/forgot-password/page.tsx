@@ -6,7 +6,7 @@ import { isRateLimitError } from '@/lib/supabase/errors'
 import Link from 'next/link'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
-import { Mail, CheckCircle, AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react'
+import { Mail, AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react'
 
 export default function ForgotPasswordPage() {
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
@@ -43,81 +43,93 @@ export default function ForgotPasswordPage() {
       const { error: authError } = await supabase.auth.resetPasswordForEmail(
         email.trim().toLowerCase(),
         {
-          // El callback intercambia el code y redirige a /auth/reset-password
+          // El callback intercambia el code y redirige a /auth/reset-password.
+          // ⚠️ Esta URL DEBE estar en la whitelist de Supabase Dashboard →
+          //    Authentication → URL Configuration → Redirect URLs.
+          //    Ver supabase/SUPABASE_SETUP.md para instrucciones.
           redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
         }
       )
 
       if (authError) {
         if (isRateLimitError(authError.message)) {
-          // ─── Rate-limit: el email YA fue enviado recientemente ───────────
-          // Supabase comparte el límite entre signUp OTP y resetPassword.
-          // Si llegamos aquí, hay un link válido en la bandeja del usuario.
-          // → mostrar pantalla "revisá tu email" con mensaje contextual,
-          //   NO bloquear con un error que confunde.
+          // Rate-limit = Supabase ya procesó un recovery request recientemente.
+          // El email debería estar en camino. Mostrar pantalla de instrucciones.
           setPreviouslySent(true)
           setSent(true)
           setCooldown(60)
           return
         }
-        // Cualquier otro error sí merece mensaje de error
-        setError('No se pudo enviar el email. Intentá de nuevo.')
+        setError('No se pudo procesar la solicitud. Intentá de nuevo.')
         return
       }
 
-      // Envío exitoso
+      // Supabase aceptó el request (no garantiza que el email haya llegado aún)
       setSent(true)
       setCooldown(60)
 
     } finally {
       inFlight.current = false
-      setLoading(false)   // siempre resetear loading, incluso en éxito
+      setLoading(false)
     }
   }
 
-  // ── Pantalla post-envío (éxito o rate-limit) ──────────────────
+  // ── Pantalla post-envío ────────────────────────────────────────────────────
   if (sent) {
     return (
-      <div className="min-h-[85vh] flex items-center justify-center px-4 bg-[#FAFAFA]">
-        <div className="w-full max-w-sm text-center space-y-5 bg-white border border-[#E4E4EC] rounded-2xl p-8 shadow-card">
+      <div className="min-h-[85vh] flex items-center justify-center px-4 py-10 bg-[#FAFAFA]">
+        <div className="w-full max-w-sm bg-white border border-[#E4E4EC] rounded-2xl p-8 shadow-card space-y-5">
 
-          {/* Ícono */}
+          {/* Ícono — neutral (mail), no verde "éxito", porque no sabemos si llegó */}
           <div className="flex justify-center">
-            <div className="w-16 h-16 bg-green-50 border border-green-200 rounded-2xl flex items-center justify-center">
-              <CheckCircle className="w-8 h-8 text-green-500" />
+            <div className="w-16 h-16 bg-[#F5F4FF] border border-[#DDDCFF] rounded-2xl flex items-center justify-center">
+              <Mail className="w-8 h-8 text-[#5856D6]" />
             </div>
           </div>
 
-          {/* Mensaje */}
-          <div>
+          {/* Título + descripción */}
+          <div className="text-center">
             <h2 className="text-xl font-bold text-[#0F0F14]">Revisá tu email</h2>
 
             {previouslySent ? (
-              /* Rate-limit: ya hay un email en la bandeja */
-              <>
-                <p className="text-[#6B6B7B] mt-2 text-sm leading-relaxed">
-                  Ya enviamos un link de recuperación a{' '}
-                  <span className="font-semibold text-[#0F0F14]">{email}</span>{' '}
-                  recientemente. Revisá tu bandeja de entrada.
-                </p>
-                <p className="text-[#B0B0BE] mt-2 text-xs">
-                  Revisá también spam · El link vence en 1 hora
-                </p>
-              </>
+              <p className="text-[#6B6B7B] mt-2 text-sm leading-relaxed">
+                Ya procesamos un pedido de recuperación para{' '}
+                <span className="font-semibold text-[#0F0F14]">{email}</span>{' '}
+                recientemente. El link debería estar en tu bandeja.
+              </p>
             ) : (
-              /* Envío fresco */
-              <>
-                <p className="text-[#6B6B7B] mt-2 text-sm leading-relaxed">
-                  Si existe una cuenta con{' '}
-                  <span className="font-semibold text-[#0F0F14]">{email}</span>,
-                  recibirás un link para restablecer tu contraseña en los próximos minutos.
-                </p>
-                <p className="text-[#B0B0BE] mt-2 text-xs">
-                  Revisá también spam · El link vence en 1 hora
-                </p>
-              </>
+              <p className="text-[#6B6B7B] mt-2 text-sm leading-relaxed">
+                Si{' '}
+                <span className="font-semibold text-[#0F0F14]">{email}</span>{' '}
+                tiene una cuenta registrada, deberías recibir el link
+                de recuperación en los próximos minutos.
+              </p>
             )}
           </div>
+
+          {/* Checklist de dónde buscar — lo más importante */}
+          <div className="bg-[#FAFAFA] border border-[#E4E4EC] rounded-xl p-4 space-y-2.5">
+            <p className="text-xs font-semibold text-[#6B6B7B] uppercase tracking-wide">
+              Si no aparece en tu bandeja, revisá:
+            </p>
+            <div className="space-y-2">
+              {[
+                { icon: '📥', label: 'Carpeta de Spam' },
+                { icon: '🏷️', label: 'Pestaña Promociones (Gmail)' },
+                { icon: '⏱️', label: 'Puede tardar hasta 5 minutos' },
+              ].map(({ icon, label }) => (
+                <div key={label} className="flex items-center gap-2.5 text-sm text-[#4B4B5A]">
+                  <span className="text-base leading-none">{icon}</span>
+                  <span>{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Nota sobre expiración */}
+          <p className="text-center text-xs text-[#B0B0BE]">
+            El link vence en <strong className="text-[#6B6B7B]">1 hora</strong> · Usalo solo una vez
+          </p>
 
           {/* Botón de volver */}
           <Link
@@ -128,15 +140,15 @@ export default function ForgotPasswordPage() {
           </Link>
 
           {/* Reenviar (con cooldown) */}
-          <div className="pt-1">
-            <p className="text-xs text-[#B0B0BE] mb-1.5">¿No llegó nada?</p>
+          <div className="text-center pt-1 space-y-1.5">
+            <p className="text-xs text-[#B0B0BE]">¿No llegó después de 5 minutos?</p>
             <button
               onClick={() => { setSent(false); setPreviouslySent(false) }}
               disabled={cooldown > 0}
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#5856D6] hover:text-[#4644b8] disabled:text-[#B0B0BE] disabled:cursor-not-allowed transition-colors"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              {cooldown > 0 ? `Reenviar en ${cooldown}s` : 'Volver a intentar'}
+              {cooldown > 0 ? `Reenviar en ${cooldown}s` : 'Intentar de nuevo'}
             </button>
           </div>
 
@@ -145,7 +157,7 @@ export default function ForgotPasswordPage() {
     )
   }
 
-  // ── Formulario ────────────────────────────────────────────────
+  // ── Formulario ─────────────────────────────────────────────────────────────
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-10 bg-[#FAFAFA]">
       <div className="w-full max-w-md">
