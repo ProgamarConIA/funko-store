@@ -33,7 +33,7 @@ import Link from 'next/link'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import OTPInput from '@/components/ui/OTPInput'
-import { Mail, Lock, User, CheckCircle, AlertCircle, RefreshCw, Info } from 'lucide-react'
+import { Mail, Lock, User, CheckCircle, AlertCircle, RefreshCw, Info, LogIn } from 'lucide-react'
 
 type Step = 'form' | 'otp' | 'verified'
 
@@ -52,6 +52,8 @@ export default function RegisterPage() {
   const [loading, setLoading]       = useState(false)
   const [loadingMsg, setLoadingMsg] = useState('Creando cuenta...')
   const [error, setError]           = useState('')
+  // Flag especial: email duplicado → render con links en lugar de texto plano
+  const [isDuplicateEmail, setIsDuplicateEmail] = useState(false)
   const inFlight = useRef(false)
 
   // ── Estado del OTP ────────────────────────────────────────────
@@ -81,6 +83,7 @@ export default function RegisterPage() {
   const goBackToForm = () => {
     setStep('form')
     setError('')
+    setIsDuplicateEmail(false)
     setOtpError('')
     setOtpPreviouslySent(false)
     setResendCooldown(0)
@@ -155,12 +158,10 @@ export default function RegisterPage() {
       // Supabase señala "email ya registrado" de dos formas según versión:
       //   a) data.user === null (sin error explícito)
       //   b) data.user existe pero identities: [] (ghost user)
-      // Ambos casos = el email ya tiene una cuenta → mismo mensaje claro.
+      // Ambos casos = el email ya tiene una cuenta → activar render especial con links.
       if (!data.user || !data.user.identities?.length) {
-        setError(
-          'Este email ya tiene una cuenta creada. ' +
-          'Iniciá sesión o usá "¿Olvidaste tu contraseña?" para recuperar el acceso.'
-        )
+        setIsDuplicateEmail(true)
+        setError('')
         setLoading(false)
         return
       }
@@ -439,7 +440,34 @@ export default function RegisterPage() {
             autoComplete="new-password"
           />
 
-          {error && (
+          {/* Error: email ya registrado — con links accionables */}
+          {isDuplicateEmail && (
+            <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm space-y-2">
+              <div className="flex items-start gap-2.5 text-amber-800">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span className="font-medium">Este email ya tiene una cuenta creada.</span>
+              </div>
+              <div className="flex items-center gap-3 pl-6">
+                <Link
+                  href="/auth/login"
+                  className="inline-flex items-center gap-1 text-[#5856D6] hover:text-[#4644b8] font-semibold underline underline-offset-2 transition-colors"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  Iniciar sesión
+                </Link>
+                <span className="text-amber-500">·</span>
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-[#5856D6] hover:text-[#4644b8] font-semibold underline underline-offset-2 transition-colors"
+                >
+                  Recuperar contraseña
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Error genérico */}
+          {error && !isDuplicateEmail && (
             <div className="flex items-start gap-2.5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
               <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
               <span>{error}</span>

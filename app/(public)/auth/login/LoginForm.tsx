@@ -99,17 +99,27 @@ export default function LoginForm() {
           required
           autoComplete="email"
         />
-        <Input
-          id="password"
-          label="Contraseña"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="••••••••"
-          icon={<Lock className="w-4 h-4" />}
-          required
-          autoComplete="current-password"
-        />
+        <div className="space-y-1">
+          <Input
+            id="password"
+            label="Contraseña"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            icon={<Lock className="w-4 h-4" />}
+            required
+            autoComplete="current-password"
+          />
+          <div className="text-right">
+            <Link
+              href="/auth/forgot-password"
+              className="text-xs text-[#6B6B7B] hover:text-[#5856D6] transition-colors"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
+        </div>
 
         {/* ── Error genérico ── */}
         {error && !isUnconfirmed && (
