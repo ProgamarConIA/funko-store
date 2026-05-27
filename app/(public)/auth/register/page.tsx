@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Flujo de registro con verificación OTP:
+ * Flujo de registro con verificación OTP — versión con hardening de seguridad.
  *
  *  Paso 1 — Formulario  : email + contraseña + nombre
  *  Paso 2 — OTP         : código de 8 dígitos enviado al email
@@ -12,17 +12,32 @@
  *   El template debe incluir {{ .Token }} para mostrar el código OTP.
  *   Ver supabase/email-templates/confirm-signup.html como referencia.
  *
- * ─── Casos cubiertos ──────────────────────────────────────────────
+ * ─── Casos cubiertos ──────────────────────────────────────────────────────────
  *
  *  A) Usuario nuevo               → OTP enviado, mostrar pantalla OTP
  *  B) Email ya confirmado         → error claro, no se envía nada
  *  C) Email pendiente (sin OTP)   → Supabase reenvía OTP, pantalla OTP
- *  D) Rate-limit en signUp()      → OTP ya fue enviado antes,
- *                                   mostrar pantalla OTP con aviso
+ *  D) Rate-limit en signUp()      → resend() confirma si el OTP existe para
+ *                                   ESTE email específico antes de mostrar OTP
  *  E) Rate-limit en resend()      → mensaje suave + cooldown extendido
  *  F) OTP expirado                → error específico + prompt reenvío
- *  G) OTP incorrecto              → error + limpiar inputs
- *  H) Usuario abandona flujo OTP  → "← Usar otro email" resetea todo
+ *  G) OTP incorrecto              → error + limpiar inputs + contador de intentos
+ *  H) Usuario abandona flujo OTP  → "← Usar otro email" resetea TODO el estado
+ *
+ * ─── Modelo de seguridad ──────────────────────────────────────────────────────
+ *
+ *  pendingOtpEmail (state)
+ *    ↳ Se fija SOLAMENTE cuando signUp() o resend() confirman que Supabase
+ *      tiene un OTP challenge activo para ese email.
+ *    ↳ verifyOtp() usa SIEMPRE este valor — nunca form.email directamente.
+ *    ↳ Se limpia en goBackToForm(), invalidando cualquier challenge anterior.
+ *    ↳ Esto previene que un OTP de email A verifique la cuenta de email B.
+ *
+ *  otpAttempts (ref)
+ *    ↳ Cuenta intentos fallidos en la sesión actual del challenge.
+ *    ↳ Al llegar a MAX_OTP_ATTEMPTS se bloquea la verificación y se fuerza
+ *      al usuario a reiniciar el flujo completo.
+ *    ↳ Se resetea a 0 en goBackToForm() y en cada resend exitoso.
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -37,33 +52,48 @@ import { Mail, Lock, User, CheckCircle, AlertCircle, RefreshCw, Info, LogIn } fr
 
 type Step = 'form' | 'otp' | 'verified'
 
+/** Máximo de intentos OTP fallidos antes de forzar reinicio del flujo */
+const MAX_OTP_ATTEMPTS = 5
+
 export default function RegisterPage() {
-  // Cliente Supabase: inicializado solo en el cliente para evitar que
-  // createBrowserClient acceda a `location` durante el SSR de Next.js.
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
   if (typeof window !== 'undefined' && !supabaseRef.current) {
     supabaseRef.current = createClient()
   }
   const supabase = supabaseRef.current!
 
-  // ── Estado del formulario ─────────────────────────────────────
+  // ── Estado del formulario ─────────────────────────────────────────────────
   const [step, setStep]             = useState<Step>('form')
   const [form, setForm]             = useState({ full_name: '', email: '', password: '', confirm: '' })
   const [loading, setLoading]       = useState(false)
   const [loadingMsg, setLoadingMsg] = useState('Creando cuenta...')
   const [error, setError]           = useState('')
-  // Flag especial: email duplicado → render con links en lugar de texto plano
   const [isDuplicateEmail, setIsDuplicateEmail] = useState(false)
   const inFlight = useRef(false)
 
-  // ── Estado del OTP ────────────────────────────────────────────
-  const [otpError, setOtpError]             = useState('')
-  const [otpLoading, setOtpLoading]         = useState(false)
-  const [otpKey, setOtpKey]                 = useState(0)      // remonta OTPInput para limpiar al error
-  const [resendLoading, setResendLoading]   = useState(false)
-  const [resendCooldown, setResendCooldown] = useState(0)
-  // True cuando llegamos al OTP por rate-limit: el código ya fue enviado antes
-  const [otpPreviouslySent, setOtpPreviouslySent] = useState(false)
+  // ── Estado del OTP ────────────────────────────────────────────────────────
+  /**
+   * pendingOtpEmail: el email para el cual Supabase tiene un OTP challenge activo.
+   *
+   * Se fija cuando se confirma que el challenge existe (signUp exitoso, o resend
+   * exitoso/rate-limited al intentar confirmar el challenge tras un rate-limit en signUp).
+   * Se usa EXCLUSIVAMENTE en verifyOtp() — nunca se usa form.email directamente.
+   * Se limpia en goBackToForm() para invalidar el challenge anterior.
+   */
+  const [pendingOtpEmail, setPendingOtpEmail]       = useState('')
+  const [otpError, setOtpError]                     = useState('')
+  const [otpLoading, setOtpLoading]                 = useState(false)
+  const [otpKey, setOtpKey]                         = useState(0)
+  const [resendLoading, setResendLoading]           = useState(false)
+  const [resendCooldown, setResendCooldown]         = useState(0)
+  const [otpPreviouslySent, setOtpPreviouslySent]   = useState(false)
+
+  /**
+   * otpAttempts: contador de intentos fallidos del challenge actual.
+   * Ref (no state) para no causar re-renders en cada incremento.
+   * Se resetea en goBackToForm() y después de cada resend exitoso.
+   */
+  const otpAttempts = useRef(0)
 
   // Countdown para reenvío (decrementa cada segundo)
   useEffect(() => {
@@ -77,8 +107,11 @@ export default function RegisterPage() {
       setForm(prev => ({ ...prev, [field]: e.target.value }))
 
   /**
-   * Vuelve al formulario reseteando TODOS los estados relacionados con OTP.
-   * Usado en el botón "← Usar otro email".
+   * Vuelve al formulario invalidando el challenge OTP activo.
+   *
+   * Es CRÍTICO limpiar pendingOtpEmail aquí: garantiza que cualquier
+   * intento de verificación posterior requiera un nuevo challenge,
+   * previniendo que un código de un email anterior valide otro email.
    */
   const goBackToForm = () => {
     setStep('form')
@@ -87,20 +120,25 @@ export default function RegisterPage() {
     setOtpError('')
     setOtpPreviouslySent(false)
     setResendCooldown(0)
-    setOtpKey(k => k + 1)     // limpia los inputs físicamente
+    setOtpKey(k => k + 1)
     setOtpLoading(false)
+    // ⚠️ Invalida el challenge activo: el próximo verifyOtp() requiere
+    //    un nuevo signUp() o resend() para fijar un nuevo pendingOtpEmail.
+    setPendingOtpEmail('')
+    otpAttempts.current = 0
   }
 
-  // ═══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
   //  PASO 1 — Envío del formulario
-  // ═══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     if (inFlight.current || loading) return
     inFlight.current = true
     setError('')
+    setIsDuplicateEmail(false)
 
-    // ── Validaciones síncronas ────────────────────────────────────
+    // ── Validaciones síncronas ──────────────────────────────────────────────
     if (form.password !== form.confirm) {
       setError('Las contraseñas no coinciden.')
       inFlight.current = false
@@ -115,7 +153,7 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      // ── Validación async de email (blocklist + MX) ────────────
+      // ── Validación async de email (blocklist + MX) ──────────────────────
       setLoadingMsg('Verificando email...')
       const emailCheck = await validateEmail(form.email)
       if (!emailCheck.valid) {
@@ -126,39 +164,62 @@ export default function RegisterPage() {
       }
       setLoadingMsg('Creando cuenta...')
 
+      const normalizedEmail = form.email.trim().toLowerCase()
+
       const { data, error: authError } = await supabase.auth.signUp({
-        email:    form.email.trim().toLowerCase(),
+        email:    normalizedEmail,
         password: form.password,
         options: {
           data: { full_name: form.full_name.trim() },
-          // Fallback: si el usuario llega al link del email en lugar de ingresar el OTP
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
 
-      // ── Manejo de errores de Supabase ──────────────────────────
+      // ── Manejo de errores de Supabase ───────────────────────────────────
       if (authError) {
         if (isRateLimitError(authError.message)) {
-          // Rate-limit significa que este email ya tiene un OTP enviado.
-          // En lugar de mostrar error, llevamos al usuario a la pantalla OTP
-          // para que ingrese el código que ya recibió (o espere para reenviar).
-          setOtpPreviouslySent(true)
-          setStep('otp')
-          setResendCooldown(60)
+          // ─── Rate-limit en signUp ───────────────────────────────────────
+          // No asumimos automáticamente que hay un OTP pendiente para ESTE email.
+          // El rate-limit puede ser:
+          //   a) Email-específico: OTP ya enviado a este email → challenge activo
+          //   b) IP/global: ningún OTP fue enviado para este email
+          //
+          // Para distinguir los casos, llamamos resend():
+          //   • Si resend() tiene éxito o rate-limita → challenge activo para este email
+          //   • Si resend() falla con otro error (ej: "user not found") → no hay challenge
+          setLoadingMsg('Verificando estado...')
+          const { error: resendErr } = await supabase.auth.resend({
+            type:  'signup',
+            email: normalizedEmail,
+            options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+          })
+
+          if (!resendErr || isRateLimitError(resendErr.message)) {
+            // ✅ resend confirmó que hay un challenge activo para este email
+            setPendingOtpEmail(normalizedEmail)
+            otpAttempts.current = 0
+            setOtpPreviouslySent(true)
+            setStep('otp')
+            setResendCooldown(60)
+          } else {
+            // ❌ resend falló con error distinto de rate-limit → no hay challenge
+            // Mostrar error genérico de rate-limit (no tiene sentido mostrar OTP)
+            setError('Demasiados intentos. Esperá unos minutos e intentá de nuevo.')
+          }
           setLoading(false)
           return
         }
+
         setError(translateSignUpError(authError.message))
         setLoading(false)
         return
       }
 
-      // ── Respuesta exitosa de Supabase ──────────────────────────
+      // ── Respuesta exitosa de Supabase ───────────────────────────────────
       //
       // Supabase señala "email ya registrado" de dos formas según versión:
       //   a) data.user === null (sin error explícito)
       //   b) data.user existe pero identities: [] (ghost user)
-      // Ambos casos = el email ya tiene una cuenta → activar render especial con links.
       if (!data.user || !data.user.identities?.length) {
         setIsDuplicateEmail(true)
         setError('')
@@ -167,13 +228,16 @@ export default function RegisterPage() {
       }
 
       if (data.session) {
-        // Confirmación de email deshabilitada en Supabase → sesión inmediata
+        // Confirmación de email deshabilitada → sesión inmediata
         setStep('verified')
         setTimeout(() => { window.location.href = '/' }, 2_000)
         return
       }
 
-      // Caso normal: confirmación de email requerida, OTP enviado
+      // ✅ OTP enviado: fijar el email del challenge ANTES de cambiar el step.
+      // A partir de aquí, pendingOtpEmail es el único email válido para verifyOtp().
+      setPendingOtpEmail(normalizedEmail)
+      otpAttempts.current = 0
       setOtpPreviouslySent(false)
       setStep('otp')
       setResendCooldown(60)
@@ -183,52 +247,86 @@ export default function RegisterPage() {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
   //  PASO 2 — Verificación del código OTP
-  // ═══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
   const handleVerifyOTP = async (code: string) => {
     if (otpLoading) return
+
+    // ── Guardia de seguridad #1: challenge válido ──────────────────────────
+    // pendingOtpEmail debe estar fijado. Si está vacío, el estado es inválido
+    // (no se llegó por el flujo normal, o goBackToForm limpió el challenge).
+    if (!pendingOtpEmail) {
+      setOtpError('Sesión de verificación inválida. Usá "← Usar otro email" para reiniciar.')
+      return
+    }
+
+    // ── Guardia de seguridad #2: límite de intentos ────────────────────────
+    // Evita fuerza bruta y limita el daño de códigos robados/filtrados.
+    if (otpAttempts.current >= MAX_OTP_ATTEMPTS) {
+      setOtpError(
+        `Demasiados intentos fallidos (${MAX_OTP_ATTEMPTS}/${MAX_OTP_ATTEMPTS}). ` +
+        'Usá "← Usar otro email" para solicitar un código nuevo.'
+      )
+      return
+    }
+
     setOtpLoading(true)
     setOtpError('')
 
+    // ⚠️ CRÍTICO: siempre usamos pendingOtpEmail, NUNCA form.email.
+    // pendingOtpEmail fue fijado cuando Supabase confirmó el challenge para ese email.
+    // Esto previene que un OTP generado para email A verifique la cuenta de email B.
     const { error } = await supabase.auth.verifyOtp({
-      email: form.email.trim().toLowerCase(),
+      email: pendingOtpEmail,
       token: code,
-      type:  'email',   // 'email' = confirmación de signup via OTP
+      type:  'email',
     })
 
     if (error) {
+      // Incrementar contador SOLO en error (un éxito no cuenta como intento fallido)
+      otpAttempts.current++
+      const attemptsLeft = MAX_OTP_ATTEMPTS - otpAttempts.current
+
       const m = error.message.toLowerCase()
       setOtpError(
         m.includes('expired')
           ? 'El código expiró. Hacé click en "Reenviar código" para obtener uno nuevo.'
           : m.includes('invalid') || m.includes('incorrect') || m.includes('not found')
-            ? 'Código incorrecto. Verificá los dígitos e intentá de nuevo.'
+            ? attemptsLeft > 0
+              ? `Código incorrecto. Verificá los dígitos e intentá de nuevo.${attemptsLeft === 1 ? ' (último intento)' : ''}`
+              : `Código incorrecto. Alcanzaste el límite de intentos. Usá "← Usar otro email" para reiniciar.`
             : isRateLimitError(error.message)
               ? 'Demasiados intentos. Esperá un momento antes de volver a intentar.'
               : translateAuthError(error.message)
       )
-      setOtpKey(k => k + 1)   // limpia los inputs para nueva entrada
+      setOtpKey(k => k + 1)   // limpia los inputs físicamente para nueva entrada
       setOtpLoading(false)
       return
     }
 
-    // ✅ Verificación exitosa — Supabase creó la sesión automáticamente
+    // ✅ Verificación exitosa — Supabase crea la sesión automáticamente
+    otpAttempts.current = 0
     setStep('verified')
     setTimeout(() => { window.location.href = '/' }, 2_000)
   }
 
-  // ═══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
   //  Reenvío del código OTP
-  // ═══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
   const handleResend = async () => {
     if (resendCooldown > 0 || resendLoading) return
     setResendLoading(true)
     setOtpError('')
 
+    // Usar el email del challenge activo (pendingOtpEmail), que debe ser idéntico
+    // a form.email mientras el usuario está en la pantalla OTP (no puede modificarlo).
+    // Si pendingOtpEmail está vacío (estado inválido), usar form.email como fallback.
+    const emailToResend = pendingOtpEmail || form.email.trim().toLowerCase()
+
     const { error } = await supabase.auth.resend({
       type:  'signup',
-      email: form.email.trim().toLowerCase(),
+      email: emailToResend,
       options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     })
 
@@ -236,21 +334,25 @@ export default function RegisterPage() {
 
     if (error) {
       if (isRateLimitError(error.message)) {
-        // Supabase rate-limitó el reenvío: el código anterior sigue vigente
+        // El código anterior sigue activo; pendingOtpEmail ya es correcto
         setOtpError('El código anterior sigue activo. Esperá 1 minuto antes de pedir otro.')
-        setResendCooldown(60)   // resetear countdown para sincronizar con Supabase
+        setResendCooldown(60)
       } else {
         setOtpError(translateSignUpError(error.message))
       }
     } else {
-      setOtpPreviouslySent(false)   // el nuevo código ya no es "el de antes"
+      // ✅ Nuevo código enviado: actualizar/confirmar el email del challenge
+      // y resetear el contador de intentos (código nuevo = oportunidad nueva).
+      setPendingOtpEmail(emailToResend)
+      otpAttempts.current = 0
+      setOtpPreviouslySent(false)
       setResendCooldown(60)
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
   //  Pantalla: cuenta verificada
-  // ═══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
   if (step === 'verified') {
     return (
       <div className="min-h-[85vh] flex items-center justify-center px-4 bg-[#FAFAFA]">
@@ -272,10 +374,15 @@ export default function RegisterPage() {
     )
   }
 
-  // ═══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
   //  Pantalla: ingreso del código OTP
-  // ═══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
   if (step === 'otp') {
+    // El email que se muestra y se usa para verificar es pendingOtpEmail,
+    // no form.email. Ambos deberían ser iguales en condiciones normales,
+    // pero usar pendingOtpEmail es explícito y elimina cualquier ambigüedad.
+    const displayEmail = pendingOtpEmail || form.email
+
     return (
       <div className="min-h-[85vh] flex items-center justify-center px-4 py-10 bg-[#FAFAFA]">
         <div className="w-full max-w-sm">
@@ -295,13 +402,14 @@ export default function RegisterPage() {
                     ? 'Ya enviamos un código a'
                     : 'Enviamos un código de 8 dígitos a'}
                 </p>
+                {/* ⚠️ Mostrar el email del challenge activo, no form.email */}
                 <p className="font-semibold text-[#0F0F14] text-sm mt-0.5 break-all">
-                  {form.email}
+                  {displayEmail}
                 </p>
               </div>
             </div>
 
-            {/* Info: código enviado previamente (caso rate-limit en signUp) */}
+            {/* Aviso cuando llegamos al OTP por rate-limit */}
             {otpPreviouslySent && !otpError && (
               <div className="flex items-start gap-2.5 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm">
                 <Info className="w-4 h-4 mt-0.5 shrink-0" />
@@ -359,7 +467,7 @@ export default function RegisterPage() {
               </button>
             </div>
 
-            {/* Volver al formulario */}
+            {/* Volver al formulario — invalida el challenge activo */}
             <div className="pt-3 border-t border-[#F0EFF8] text-center">
               <button
                 onClick={goBackToForm}
@@ -375,9 +483,9 @@ export default function RegisterPage() {
     )
   }
 
-  // ═══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
   //  Pantalla: formulario de registro (paso 1)
-  // ═══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-10 bg-[#FAFAFA]">
       <div className="w-full max-w-md">
