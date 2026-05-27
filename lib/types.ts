@@ -47,7 +47,18 @@ export interface Order {
   id: string
   user_id: string
   status: OrderStatus
+  /** Total en EUR — base contable interna, usada por el panel admin. */
   total: number
+  /**
+   * Código ISO 4217 de la moneda elegida por el usuario al hacer checkout.
+   * Undefined en órdenes antiguas → tratar como 'EUR'.
+   */
+  currency?: string
+  /**
+   * Total convertido a `currency` al momento del checkout.
+   * Undefined en órdenes antiguas → usar `total` (EUR).
+   */
+  display_total?: number
   shipping_address: ShippingAddress
   created_at: string
   updated_at: string

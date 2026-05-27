@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { useCartStore } from '@/store/cartStore'
+import { useCurrencyStore } from '@/store/currencyStore'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import PriceDisplay from '@/components/ui/PriceDisplay'
@@ -21,6 +22,11 @@ export default function CheckoutPage() {
   if (typeof window !== 'undefined' && !supabaseRef.current) {
     supabaseRef.current = createClient()
   }
+
+  // Moneda seleccionada por el usuario (primitivos para re-render correcto)
+  const currencyCode = useCurrencyStore((s) => s.code)
+  const currencyRate = useCurrencyStore((s) => s.rate)
+
   const [step, setStep] = useState<'shipping' | 'payment'>('shipping')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -43,12 +49,22 @@ export default function CheckoutPage() {
       const { data: { user } } = await supabaseRef.current!.auth.getUser()
       if (!user) { router.push('/auth/login?redirect=/checkout'); return }
 
+      const totalEUR      = totalPrice()                                // base contable
+      const displayTotal  = parseFloat((totalEUR * currencyRate).toFixed(2)) // en moneda del usuario
+
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: items.map((i) => ({ product_id: i.product.id, quantity: i.quantity, unit_price: i.product.price })),
-          total: totalPrice(),
+          items: items.map((i) => ({
+            product_id: i.product.id,
+            quantity:   i.quantity,
+            // unit_price en la moneda del usuario para consistencia en el recibo
+            unit_price: parseFloat((i.product.price * currencyRate).toFixed(2)),
+          })),
+          total:          totalEUR,       // EUR — base contable para admin
+          currency:       currencyCode,   // código ISO elegido por el usuario
+          display_total:  displayTotal,   // monto en la moneda del usuario
           shipping_address: address,
         }),
       })

@@ -9,11 +9,18 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
     const body = await request.json()
-    const { items, total, shipping_address } = body
+    const { items, total, shipping_address, currency, display_total } = body
 
     if (!items?.length || !total || !shipping_address) {
       return NextResponse.json({ error: 'Datos incompletos' }, { status: 400 })
     }
+
+    // Sanitizar moneda: acepta solo códigos ISO válidos de nuestro catálogo
+    const VALID_CURRENCIES = ['EUR', 'USD', 'ARS', 'MXN', 'COP', 'CLP', 'BRL', 'JPY']
+    const safeCurrency     = VALID_CURRENCIES.includes(currency) ? currency : 'EUR'
+    const safeDisplayTotal = typeof display_total === 'number' && display_total >= 0
+      ? display_total
+      : total   // fallback: si no vino display_total, usar el total EUR
 
     // Verificar stock de cada producto
     for (const item of items) {
@@ -34,7 +41,14 @@ export async function POST(request: Request) {
     // Crear la orden
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
-      .insert({ user_id: user.id, status: 'paid', total, shipping_address })
+      .insert({
+        user_id:        user.id,
+        status:         'paid',
+        total,                      // EUR — base contable interna
+        currency:       safeCurrency,
+        display_total:  safeDisplayTotal,
+        shipping_address,
+      })
       .select()
       .single()
 

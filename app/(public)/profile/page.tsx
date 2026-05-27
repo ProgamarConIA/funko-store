@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { formatDate } from '@/lib/utils'
+import { formatDate, formatPrice } from '@/lib/utils'
 import Link from 'next/link'
 import { User, Package, ShoppingBag, Calendar } from 'lucide-react'
 
@@ -22,7 +22,7 @@ export default async function ProfilePage() {
 
   const { data: orders } = await supabase
     .from('orders')
-    .select('id, status, total, created_at')
+    .select('id, status, total, currency, display_total, created_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(5)
@@ -174,7 +174,10 @@ export default async function ProfilePage() {
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold" style={{ color: 'var(--accent-icon)' }}>
-                          ${order.total.toFixed(2)}
+                          {formatPrice(
+                            (order as { display_total?: number; currency?: string }).display_total ?? order.total,
+                            (order as { display_total?: number; currency?: string }).currency ?? 'EUR',
+                          )}
                         </p>
                         <span
                           className="text-xs px-2 py-0.5 rounded-full font-medium"

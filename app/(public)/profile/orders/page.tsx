@@ -17,7 +17,7 @@ export default async function OrdersPage() {
   const { data: orders } = await supabase
     .from('orders')
     .select(`
-      id, status, total, created_at, shipping_address,
+      id, status, total, currency, display_total, created_at, shipping_address,
       order_items (
         id, quantity, unit_price,
         product:products (id, name, image_url, character)
@@ -60,7 +60,12 @@ export default async function OrdersPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <p className="font-bold text-[#f1f0ff]">{formatPrice(order.total)}</p>
+                  <p className="font-bold text-[#f1f0ff]">
+                    {formatPrice(
+                      (order as { display_total?: number; currency?: string }).display_total ?? order.total,
+                      (order as { display_total?: number; currency?: string }).currency ?? 'EUR',
+                    )}
+                  </p>
                   <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getOrderStatusColor(order.status)}`}>
                     {getOrderStatusLabel(order.status)}
                   </span>
@@ -82,7 +87,10 @@ export default async function OrdersPage() {
                         {item.product?.name ?? 'Producto eliminado'} × {item.quantity}
                       </span>
                       <span className="text-[#f1f0ff] font-semibold">
-                        {formatPrice(item.unit_price * item.quantity)}
+                        {formatPrice(
+                          item.unit_price * item.quantity,
+                          (order as { currency?: string }).currency ?? 'EUR',
+                        )}
                       </span>
                     </div>
                   ))}

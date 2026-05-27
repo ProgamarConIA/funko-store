@@ -6,14 +6,45 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-/** Formatea precio en euros (EUR) */
-export function formatPrice(price: number): string {
-  return new Intl.NumberFormat('es-ES', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(price)
+/**
+ * Formatea un monto ya convertido en la moneda indicada.
+ * El segundo parámetro es opcional — por defecto EUR, compatible con todo
+ * el código existente que llama a formatPrice(amount) sin segundo arg.
+ *
+ * Ejemplos:
+ *   formatPrice(59.99)          → "59,99 €"
+ *   formatPrice(97860, 'ARS')   → "$ 97.860"
+ *   formatPrice(69.58, 'USD')   → "$69.58"
+ */
+export function formatPrice(amount: number, currency = 'EUR'): string {
+  // Monedas sin decimales
+  const noDecimals = ['ARS', 'CLP', 'COP', 'JPY'].includes(currency)
+  const decimals   = noDecimals ? 0 : 2
+
+  // Locale por moneda para separadores correctos
+  const LOCALE_MAP: Record<string, string> = {
+    EUR: 'es-ES',
+    USD: 'en-US',
+    ARS: 'es-AR',
+    MXN: 'es-MX',
+    COP: 'es-CO',
+    CLP: 'es-CL',
+    BRL: 'pt-BR',
+    JPY: 'ja-JP',
+  }
+  const locale = LOCALE_MAP[currency] ?? 'es-ES'
+
+  try {
+    return new Intl.NumberFormat(locale, {
+      style:                 'currency',
+      currency,
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    }).format(amount)
+  } catch {
+    // Fallback si el entorno no conoce la moneda
+    return `${amount.toFixed(decimals)} ${currency}`
+  }
 }
 
 /** Formatea fecha */
