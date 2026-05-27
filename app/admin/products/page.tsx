@@ -2,7 +2,6 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import type { Metadata } from 'next'
 import { Package } from 'lucide-react'
 import EditableProductRow from './EditableProductRow'
-import CurrencySelector from './CurrencySelector'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Admin — Productos' }
@@ -38,8 +37,6 @@ export default async function AdminProductsPage() {
               {bajStock} stock bajo
             </span>
           )}
-          {/* Selector de moneda */}
-          <CurrencySelector />
         </div>
       </div>
 

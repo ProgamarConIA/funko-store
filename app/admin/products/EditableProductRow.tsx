@@ -7,13 +7,6 @@ import { Save, Check, AlertCircle, Loader2, Pencil } from 'lucide-react'
 import { DEFAULT_PRODUCT_IMAGE } from '@/lib/utils'
 import EditProductModal, { type AdminProduct } from './EditProductModal'
 import ToastNotification from './ToastNotification'
-import {
-  getCurrencyInfo,
-  getRateFromCache,
-  CURRENCY_LS_KEY,
-  CURRENCY_CHANGE_EVENT,
-  type CurrencyChangePayload,
-} from './CurrencySelector'
 
 interface Product {
   id: string
@@ -36,8 +29,8 @@ interface Toast {
 // ─── Normaliza un número al mismo string que devuelve input[type="number"] ───
 // .toFixed(2) produce "17.50", pero el browser devuelve "17.5" en e.target.value.
 // parseFloat→String replica esa normalización y evita diferencias espurias.
-function toDisplayStr(value: number, decimals: number): string {
-  return String(parseFloat(value.toFixed(decimals)))
+function toDisplayStr(value: number): string {
+  return String(parseFloat(value.toFixed(2)))
 }
 
 export default function EditableProductRow({ product: initialProduct }: { product: Product }) {
@@ -46,14 +39,12 @@ export default function EditableProductRow({ product: initialProduct }: { produc
   // ── Estado del producto (actualizable localmente) ──
   const [product, setProduct] = useState<Product>(initialProduct)
 
-  // ── Precio/stock mostrados en los inputs ──
-  const [price, setPrice] = useState(() => toDisplayStr(initialProduct.price, 2))
+  // ── Precio/stock mostrados en los inputs (siempre en EUR) ──
+  const [price, setPrice] = useState(() => toDisplayStr(initialProduct.price))
   const [stock, setStock] = useState(() => String(initialProduct.stock))
 
-  // ── Baseline: último valor guardado en la moneda actual (comparación de strings) ──
-  // isDirty = price !== baselinePrice || stock !== baselineStock.
-  // Puro string → sin punto flotante, sin race conditions.
-  const [baselinePrice, setBaselinePrice] = useState(() => toDisplayStr(initialProduct.price, 2))
+  // ── Baseline: último valor guardado (comparación de strings para isDirty) ──
+  const [baselinePrice, setBaselinePrice] = useState(() => toDisplayStr(initialProduct.price))
   const [baselineStock, setBaselineStock] = useState(() => String(initialProduct.stock))
 
   const isDirty = price !== baselinePrice || stock !== baselineStock
@@ -63,55 +54,12 @@ export default function EditableProductRow({ product: initialProduct }: { produc
   const [errorMsg, setErrorMsg] = useState('')
   const [imgError, setImgError] = useState(false)
 
-  // ── Moneda y tasa ──
-  const [currencyCode,     setCurrencyCode]     = useState('EUR')
-  const [exchangeRate,     setExchangeRate]     = useState(1)
-  const [currencyDecimals, setCurrencyDecimals] = useState(2)
-
-  // ── Refs para acceder a valores actualizados sin stale closures en effects ──
-  const basePriceEurRef     = useRef(initialProduct.price)
-  const exchangeRateRef     = useRef(1)
-  const currencyDecimalsRef = useRef(2)
-
-  useEffect(() => { basePriceEurRef.current     = product.price       }, [product.price])
-  useEffect(() => { exchangeRateRef.current     = exchangeRate        }, [exchangeRate])
-  useEffect(() => { currencyDecimalsRef.current = currencyDecimals    }, [currencyDecimals])
-
-  // ── Helper: aplica tasa y sincroniza precio + baseline ──
-  const applyRate = useCallback((rate: number, decimals: number) => {
-    const display = toDisplayStr(basePriceEurRef.current * rate, decimals)
-    setPrice(display)
-    setBaselinePrice(display)   // cambiar moneda no es una edición del admin
-  }, [])
-
-  // ── Leer moneda guardada al montar + escuchar cambios del selector ──
-  useEffect(() => {
-    const savedCode = localStorage.getItem(CURRENCY_LS_KEY) ?? 'EUR'
-    if (savedCode !== 'EUR') {
-      const rate     = getRateFromCache(savedCode)
-      const info     = getCurrencyInfo(savedCode)
-      const decimals = info.decimals as number
-      setCurrencyCode(savedCode)
-      setExchangeRate(rate)
-      setCurrencyDecimals(decimals)
-      if (rate !== 1) applyRate(rate, decimals)
-    }
-
-    const handleCurrencyChange = (e: Event) => {
-      const payload = (e as CustomEvent<CurrencyChangePayload>).detail
-      setCurrencyCode(payload.code)
-      setExchangeRate(payload.rate)
-      setCurrencyDecimals(payload.decimals)
-      applyRate(payload.rate, payload.decimals)
-    }
-    window.addEventListener(CURRENCY_CHANGE_EVENT, handleCurrencyChange)
-    return () => window.removeEventListener(CURRENCY_CHANGE_EVENT, handleCurrencyChange)
-  }, [applyRate])
+  // ── Modal y toast ──
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [toast,         setToast]         = useState<Toast | null>(null)
 
   // ── Sincronizar con datos del servidor cuando initialProduct cambia ──────────
-  // Esto ocurre tras router.refresh() (llamado al guardar precio/stock).
-  // Garantiza que isDirty = false aunque algún re-render intermedio haya
-  // interferido con los setState del handleSave.
+  // Ocurre tras router.refresh() (llamado al guardar precio/stock).
   // Usamos prevRef para detectar cambios REALES (no el primer montaje).
   const prevInitialRef = useRef(initialProduct)
   useEffect(() => {
@@ -125,10 +73,7 @@ export default function EditableProductRow({ product: initialProduct }: { produc
     ) return
 
     // Los datos del servidor cambiaron → re-sincronizar estado local
-    basePriceEurRef.current = initialProduct.price
-    const rate     = exchangeRateRef.current
-    const decimals = currencyDecimalsRef.current
-    const displayP = toDisplayStr(initialProduct.price * rate, decimals)
+    const displayP = toDisplayStr(initialProduct.price)
     const displayS = String(initialProduct.stock)
 
     setProduct(initialProduct)
@@ -138,19 +83,14 @@ export default function EditableProductRow({ product: initialProduct }: { produc
     setBaselineStock(displayS)
   }, [initialProduct]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Modal y toast ──
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [toast,         setToast]         = useState<Toast | null>(null)
-
   // ─── Guardar precio/stock ──────────────────────────────────────────────────
   const handleSave = async () => {
     setStatus('loading')
     setErrorMsg('')
 
     try {
-      // Convertir precio mostrado a EUR (moneda base de la BD)
-      const priceEur      = parseFloat(price) / exchangeRate
-      const savedEurPrice = Math.round(priceEur * 100) / 100
+      // Precio ingresado en EUR directamente (moneda base de la BD)
+      const savedEurPrice = Math.round(parseFloat(price) * 100) / 100
       const savedStock    = parseInt(stock, 10)
 
       const res = await fetch(`/api/admin/products/${product.id}`, {
@@ -163,11 +103,10 @@ export default function EditableProductRow({ product: initialProduct }: { produc
       if (!res.ok) throw new Error(json.error ?? 'Error al guardar')
 
       // 1. Actualizar estado local inmediatamente
-      basePriceEurRef.current = savedEurPrice
       setProduct((prev) => ({ ...prev, price: savedEurPrice, stock: savedStock }))
 
       // 2. Sincronizar inputs y baseline con el valor canónico guardado
-      const displayPrice = toDisplayStr(savedEurPrice * exchangeRate, currencyDecimals)
+      const displayPrice = toDisplayStr(savedEurPrice)
       const displayStock = String(savedStock)
       setPrice(displayPrice)
       setBaselinePrice(displayPrice)   // isDirty → false
@@ -177,9 +116,7 @@ export default function EditableProductRow({ product: initialProduct }: { produc
       setStatus('saved')
       setTimeout(() => setStatus('idle'), 2000)
 
-      // 3. Refrescar datos del servidor como safety net:
-      //    si algún re-render intermedio revierte el estado, el useEffect de
-      //    initialProduct lo corregirá en cuanto llegue la nueva prop del server.
+      // 3. Refrescar datos del servidor como safety net
       router.refresh()
     } catch (e: unknown) {
       setStatus('error')
@@ -249,15 +186,15 @@ export default function EditableProductRow({ product: initialProduct }: { produc
         {/* Categoría */}
         <td className="px-4 py-3 text-xs text-[#6B6B7B]">{product.category}</td>
 
-        {/* Precio */}
+        {/* Precio (siempre en EUR — fuente de verdad) */}
         <td className="px-4 py-3">
           <div className="flex items-center gap-1">
-            <span className="text-xs text-[#6B6B7B]">{getCurrencyInfo(currencyCode).symbol}</span>
+            <span className="text-xs text-[#6B6B7B]">€</span>
             <input
               type="number"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              step={currencyDecimals === 0 ? '1' : '0.01'}
+              step="0.01"
               min="0"
               className="w-20 text-sm font-bold text-[#0F0F14] bg-white border border-[#E4E4EC] rounded-lg px-2 py-1 focus:outline-none focus:border-[#5856D6] focus:ring-1 focus:ring-[#5856D6]/20 transition-all"
             />
