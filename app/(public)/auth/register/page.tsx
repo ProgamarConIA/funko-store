@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { translateAuthError } from '@/lib/supabase/errors'
+import { validateEmail } from '@/lib/emailValidation'
 import Link from 'next/link'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
@@ -19,10 +20,11 @@ export default function RegisterPage() {
   // donde supabaseRef.current ya fue inicializado por la condición anterior.
   const supabase = supabaseRef.current!
 
-  const [form, setForm]       = useState({ full_name: '', email: '', password: '', confirm: '' })
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState('')
-  const [success, setSuccess] = useState(false)
+  const [form, setForm]             = useState({ full_name: '', email: '', password: '', confirm: '' })
+  const [loading, setLoading]       = useState(false)
+  const [loadingMsg, setLoadingMsg] = useState('Creando cuenta...')
+  const [error, setError]           = useState('')
+  const [success, setSuccess]       = useState(false)
   const [needsConfirm, setNeedsConfirm] = useState(true) // ¿el registro requiere confirmación de email?
   // Guard contra doble-submit
   const inFlight = useRef(false)
@@ -37,7 +39,7 @@ export default function RegisterPage() {
     inFlight.current = true
     setError('')
 
-    // ── Validaciones cliente ──────────────────────────────────
+    // ── Validaciones cliente (síncronas) ─────────────────────
     if (form.password !== form.confirm) {
       setError('Las contraseñas no coinciden.')
       inFlight.current = false
@@ -52,6 +54,17 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
+      // ── Validación de email (async: blocklist + MX record) ──
+      setLoadingMsg('Verificando email...')
+      const emailCheck = await validateEmail(form.email)
+      if (!emailCheck.valid) {
+        setError(emailCheck.error ?? 'Email no válido.')
+        setLoading(false)
+        inFlight.current = false
+        return
+      }
+      setLoadingMsg('Creando cuenta...')
+
       const { data, error: authError } = await supabase.auth.signUp({
         email:    form.email.trim().toLowerCase(),
         password: form.password,
@@ -223,7 +236,7 @@ export default function RegisterPage() {
             className="w-full"
             size="lg"
           >
-            {loading ? 'Creando cuenta...' : 'Crear cuenta'}
+            {loading ? loadingMsg : 'Crear cuenta'}
           </Button>
         </form>
 
