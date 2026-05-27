@@ -20,10 +20,16 @@ export function translateAuthError(message: string): string {
     return 'Debés confirmar tu email antes de iniciar sesión. Revisá tu bandeja de entrada (y la carpeta de spam).'
   }
 
-  // ── Rate limit de emails (demasiados registros / reenvíos) ───
+  // ── Rate limit de emails ─────────────────────────────────────
+  // Cubre todos los formatos que Supabase puede devolver:
+  //   "Email rate limit exceeded"
+  //   "over_email_send_rate_limit"
+  //   "For security purposes, you can only request this once every X seconds"
   if (
     m.includes('over_email_send_rate_limit') ||
     m.includes('email rate limit') ||
+    m.includes('security purposes') ||
+    m.includes('only request this') ||
     (m.includes('rate limit') && m.includes('email'))
   ) {
     return 'Demasiados intentos con este email. Esperá unos minutos e intentá de nuevo.'
@@ -33,7 +39,8 @@ export function translateAuthError(message: string): string {
   if (
     m.includes('over_request_rate_limit') ||
     m.includes('request rate limit') ||
-    m.includes('too many requests')
+    m.includes('too many requests') ||
+    m.includes('throttl')
   ) {
     return 'Demasiadas solicitudes. Esperá unos segundos e intentá de nuevo.'
   }
@@ -76,7 +83,7 @@ export function translateAuthError(message: string): string {
     return 'El formato del email no es válido.'
   }
 
-  // ── Fallback: devolver el mensaje original sin exponer técnico ──
+  // ── Fallback: mensaje genérico sin exponer detalles técnicos ──
   return 'Ocurrió un error. Intentá de nuevo en unos momentos.'
 }
 
@@ -84,8 +91,6 @@ export function translateAuthError(message: string): string {
 
 /**
  * Devuelve true si el mensaje es un rate-limit de cualquier tipo.
- * Se usa para sobrescribir el mensaje genérico en contextos específicos
- * (ej: registro) donde el rate-limit suele indicar un email inválido.
  */
 export function isRateLimitError(message: string): boolean {
   const m = message.toLowerCase()
@@ -95,27 +100,31 @@ export function isRateLimitError(message: string): boolean {
     m.includes('email rate limit') ||
     m.includes('request rate limit') ||
     m.includes('too many requests') ||
+    m.includes('security purposes') ||
+    m.includes('only request this') ||
     m.includes('rate limit') ||
-    m.includes('throttl')   // throttled / throttling
+    m.includes('throttl')
   )
 }
 
 /**
- * Versión especializada de translateAuthError para el flujo de REGISTRO.
+ * Versión de translateAuthError para el flujo de REGISTRO.
  *
- * Diferencias respecto a translateAuthError:
- *   - Rate limits → mensaje orienta al usuario a usar un email real,
- *     porque en registro suelen ocurrir cuando se intenta varias veces
- *     con un email falso o inexistente (Supabase envía el email de
- *     confirmación y luego limita los envíos).
- *   - El resto de errores se delega a translateAuthError.
+ * ⚠️  IMPORTANTE — por qué NO sobrescribimos rate-limits aquí:
+ *
+ *   La validación de email (blocklist + MX) se ejecuta ANTES de llamar
+ *   a signUp(). Si un email llegó a Supabase, ya pasó esos filtros y
+ *   fue considerado válido. Un rate-limit en ese punto es un rate-limit
+ *   legítimo (el usuario intentó varias veces, el plan tiene cuota baja,
+ *   etc.) — NO es evidencia de que el email sea falso.
+ *
+ *   Mapear rate-limits a "usá un email real" causaba falsos positivos:
+ *   Gmails reales veían ese mensaje si intentaban registrarse más de
+ *   una vez. Esto fue el bug reportado.
+ *
+ *   La detección de emails falsos se hace en emailValidation.ts,
+ *   no aquí.
  */
 export function translateSignUpError(message: string): string {
-  if (isRateLimitError(message)) {
-    return (
-      'No pudimos completar el registro con este email. ' +
-      'Asegurate de usar un correo real al que tengas acceso.'
-    )
-  }
   return translateAuthError(message)
 }
