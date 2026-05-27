@@ -10,6 +10,8 @@ interface CartState {
   addItem: (product: Product, quantity?: number) => void
   removeItem: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
+  /** Actualiza el precio EUR de un producto en el carrito cuando el admin lo cambia. */
+  updateProductPrice: (productId: string, newPriceEUR: number) => void
   clearCart: () => void
   openCart: () => void
   closeCart: () => void
@@ -45,6 +47,16 @@ export const useCartStore = create<CartState>()(
       removeItem: (productId) => {
         set((state) => ({
           items: state.items.filter((i) => i.product.id !== productId),
+        }))
+      },
+
+      updateProductPrice: (productId, newPriceEUR) => {
+        set((state) => ({
+          items: state.items.map((i) =>
+            i.product.id === productId
+              ? { ...i, product: { ...i.product, price: newPriceEUR } }
+              : i
+          ),
         }))
       },
 
