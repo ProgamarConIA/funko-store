@@ -1,12 +1,12 @@
 'use client'
 
 import { useCartStore } from '@/store/cartStore'
-import { formatPrice } from '@/lib/utils'
 import { X, ShoppingBag, Trash2, Plus, Minus } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { DEFAULT_PRODUCT_IMAGE } from '@/lib/utils'
 import { useState } from 'react'
+import PriceDisplay from '@/components/ui/PriceDisplay'
 
 export default function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQuantity, totalPrice, clearCart } = useCartStore()
@@ -72,9 +72,10 @@ export default function CartDrawer() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-[#0F0F14] dark:text-[#f1f0ff] truncate">{product.name}</p>
                   <p className="text-xs text-[#6B6B7B] dark:text-[#6060a0] mt-0.5">{product.franchise}</p>
-                  <p className="text-sm font-bold text-[#5856D6] dark:text-[#a88dff] mt-1">
-                    {formatPrice(product.price * quantity)}
-                  </p>
+                  <PriceDisplay
+                    priceEUR={product.price * quantity}
+                    className="text-sm font-bold text-[#5856D6] dark:text-[#a88dff] mt-1"
+                  />
                 </div>
                 <div className="flex flex-col items-end justify-between">
                   <button onClick={() => removeItem(product.id)} className="text-[#B0B0BE] dark:text-[#4a4a6a] hover:text-red-500 transition-colors">
@@ -104,7 +105,10 @@ export default function CartDrawer() {
           <div className="px-6 py-5 border-t border-[#E4E4EC] dark:border-[#1e1e35] space-y-3 bg-white dark:bg-[#0e0e16]">
             <div className="flex items-center justify-between">
               <span className="text-[#6B6B7B] dark:text-[#9090aa] text-sm">Total</span>
-              <span className="text-xl font-bold text-[#0F0F14] dark:text-[#f1f0ff]">{formatPrice(totalPrice())}</span>
+              <PriceDisplay
+                priceEUR={totalPrice()}
+                className="text-xl font-bold text-[#0F0F14] dark:text-[#f1f0ff]"
+              />
             </div>
             <Link
               href="/checkout"
