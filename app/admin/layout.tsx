@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutDashboard, Package, ShoppingBag, ArrowLeft, Shield } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingBag, Users, ArrowLeft, Shield } from 'lucide-react'
 
 // El admin panel requiere autenticación → nunca pre-renderizar estáticamente
 export const dynamic = 'force-dynamic'
@@ -12,6 +12,7 @@ const NAV = [
   { href: '/admin',          label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
   { href: '/admin/products', label: 'Productos', icon: <Package className="w-4 h-4" /> },
   { href: '/admin/orders',   label: 'Pedidos',   icon: <ShoppingBag className="w-4 h-4" /> },
+  { href: '/admin/users',    label: 'Usuarios',  icon: <Users className="w-4 h-4" /> },
 ]
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
