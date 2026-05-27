@@ -18,16 +18,17 @@ async function checkAdmin() {
   return profile?.role === 'admin' ? user : null
 }
 
-/**
- * PATCH /api/admin/users/[id]
- * Actualiza el rol de un usuario. Solo accesible para admins.
- *
- * Protecciones:
- *  - Caller debe ser admin (checkAdmin)
- *  - Role debe ser 'user' o 'admin'
- *  - No se puede modificar al admin primario (ADMIN_EMAIL)
- *  - No se puede automodificar (el admin no cambia su propio rol)
- */
+/** Carga el target y aplica protecciones comunes a PATCH y DELETE. */
+async function getTarget(id: string) {
+  const { data } = await supabaseAdmin
+    .from('profiles')
+    .select('id, email')
+    .eq('id', id)
+    .single()
+  return data
+}
+
+// ─── PATCH /api/admin/users/[id] ─────────────────────────────────────────────
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -39,28 +40,18 @@ export async function PATCH(
   const body    = await request.json() as { role?: unknown }
   const role    = body.role as Role
 
-  // Validar rol
   if (!VALID_ROLES.includes(role)) {
-    return NextResponse.json({ error: `Rol inválido. Valores permitidos: ${VALID_ROLES.join(', ')}` }, { status: 400 })
+    return NextResponse.json({ error: `Rol inválido. Permitidos: ${VALID_ROLES.join(', ')}` }, { status: 400 })
   }
-
-  // No permitir que el admin se modifique a sí mismo
   if (id === admin.id) {
     return NextResponse.json({ error: 'No podés modificar tu propio rol' }, { status: 403 })
   }
 
-  // No permitir modificar al admin primario configurado en env
-  const { data: target } = await supabaseAdmin
-    .from('profiles')
-    .select('email')
-    .eq('id', id)
-    .single()
-
+  const target = await getTarget(id)
   if (target?.email === ADMIN_EMAIL) {
     return NextResponse.json({ error: 'No se puede modificar el rol del admin principal' }, { status: 403 })
   }
 
-  // Actualizar rol (service role key omite RLS — única forma de cambiar roles)
   const { data, error } = await supabaseAdmin
     .from('profiles')
     .update({ role, updated_at: new Date().toISOString() })
@@ -70,4 +61,41 @@ export async function PATCH(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ data })
+}
+
+// ─── DELETE /api/admin/users/[id] ────────────────────────────────────────────
+/**
+ * Elimina un usuario de auth.users (cascadea a profiles por FK ON DELETE CASCADE).
+ * Usa supabaseAdmin.auth.admin.deleteUser() — requiere service role key.
+ *
+ * Protecciones:
+ *  - Caller debe ser admin
+ *  - No se puede eliminar al admin principal (ADMIN_EMAIL)
+ *  - El admin no puede eliminar su propia cuenta
+ */
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const admin = await checkAdmin()
+  if (!admin) return NextResponse.json({ error: 'Sin autorización' }, { status: 403 })
+
+  const { id } = await params
+
+  if (id === admin.id) {
+    return NextResponse.json({ error: 'No podés eliminar tu propia cuenta desde aquí' }, { status: 403 })
+  }
+
+  const target = await getTarget(id)
+  if (!target) return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
+
+  if (target.email === ADMIN_EMAIL) {
+    return NextResponse.json({ error: 'No se puede eliminar el admin principal' }, { status: 403 })
+  }
+
+  // Eliminar de auth.users → cascadea a profiles automáticamente
+  const { error } = await supabaseAdmin.auth.admin.deleteUser(id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  return NextResponse.json({ success: true })
 }
