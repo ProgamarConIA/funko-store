@@ -4,7 +4,7 @@
  * OTPInput — Input de código de verificación estilo moderno (Discord/Stripe).
  *
  * Características:
- *   - N cajas individuales (default: 6, coincide con Supabase OTP)
+ *   - N cajas individuales (default: 8, coincide con Supabase OTP)
  *   - Auto-avance al siguiente campo al tipear
  *   - Backspace limpia el campo actual; si ya está vacío, retrocede al anterior
  *   - Pegar el código completo rellena todos los campos y dispara onComplete
@@ -16,7 +16,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 interface OTPInputProps {
-  /** Cantidad de dígitos del código (default: 6 — coincide con Supabase) */
+  /** Cantidad de dígitos del código (default: 8 — coincide con Supabase) */
   length?: number
   /** Se llama cuando todos los campos están llenos */
   onComplete: (otp: string) => void
@@ -27,7 +27,7 @@ interface OTPInputProps {
 }
 
 export default function OTPInput({
-  length    = 6,
+  length    = 8,
   onComplete,
   loading   = false,
   hasError  = false,

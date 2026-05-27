@@ -4,7 +4,7 @@
  * Flujo de registro con verificación OTP:
  *
  *  Paso 1 — Formulario  : email + contraseña + nombre
- *  Paso 2 — OTP         : código de 6 dígitos enviado al email
+ *  Paso 2 — OTP         : código de 8 dígitos enviado al email
  *  Paso 3 — Verificado  : cuenta confirmada → redirect a /
  *
  * ⚠️  REQUISITO EN SUPABASE DASHBOARD:
@@ -228,7 +228,7 @@ export default function RegisterPage() {
               <div>
                 <h2 className="text-xl font-bold text-[#0F0F14]">Verificá tu email</h2>
                 <p className="text-[#6B6B7B] text-sm mt-1.5 leading-relaxed">
-                  Enviamos un código de 6 dígitos a
+                  Enviamos un código de 8 dígitos a
                 </p>
                 <p className="font-semibold text-[#0F0F14] text-sm mt-0.5 break-all">
                   {form.email}
@@ -239,6 +239,7 @@ export default function RegisterPage() {
             {/* Inputs OTP */}
             <OTPInput
               key={otpKey}
+              length={8}
               onComplete={handleVerifyOTP}
               loading={otpLoading}
               hasError={!!otpError}
