@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { LayoutDashboard, Package, ShoppingBag, Users, ArrowLeft, Shield } from 'lucide-react'
+import Navbar from '@/components/layout/Navbar'
 
 // El admin panel requiere autenticación → nunca pre-renderizar estáticamente
 export const dynamic = 'force-dynamic'
@@ -27,8 +28,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="flex min-h-screen bg-[#F5F4FF]">
 
-      {/* Sidebar */}
-      <aside className="w-56 flex-shrink-0 bg-[#0F0F14] flex flex-col fixed top-0 left-0 h-full z-40">
+      {/* Navbar pública — z-50, fixed top-0, idéntica al frontend */}
+      <Navbar />
+
+      {/* Sidebar — arranca en top-16 para no solaparse con la Navbar */}
+      <aside className="w-56 flex-shrink-0 bg-[#0F0F14] flex flex-col fixed top-16 left-0 h-[calc(100vh-4rem)] z-40">
 
         {/* Logo admin */}
         <div className="px-5 py-5 border-b border-white/10">
@@ -69,8 +73,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </aside>
 
-      {/* Contenido principal */}
-      <main className="flex-1 ml-56 overflow-auto">
+      {/* Contenido principal — ml-56 por el sidebar, pt-16 por la Navbar */}
+      <main className="flex-1 ml-56 pt-16 overflow-auto">
         <div className="max-w-6xl mx-auto px-6 py-8">
           {children}
         </div>
