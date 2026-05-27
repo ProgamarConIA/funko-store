@@ -35,56 +35,72 @@ http://localhost:3000/auth/callback?next=*
 
 ---
 
-## 2. SMTP Personalizado (MUY RECOMENDADO para Gmail)
+## 2. Configuración SMTP — Estado actual y soluciones
 
-El SMTP compartido de Supabase tiene deliverability pésima:
-- Gmail filtra a spam o promotions sistemáticamente
-- Rate limit: ~2 emails/hora por proyecto (en free tier)
-- No tiene dominio propio → baja reputación
+### ⚠️ Por qué el SMTP de Resend sin dominio verificado no funciona
 
-### Opción recomendada: Resend.com (gratuito hasta 3.000 emails/mes)
+El SMTP relay de Resend tiene una limitación crítica:
 
-1. Crear cuenta en [resend.com](https://resend.com)
-2. Crear un API Key en Resend
-3. En Supabase Dashboard → **Project Settings → Auth → SMTP Settings**:
+**Sin un dominio verificado, solo puede entregar emails al dueño de la cuenta de Resend.**
+Cualquier otro destinatario es rechazado → Supabase devuelve `"Error sending confirmation email"` → el frontend muestra error.
 
+Direcciones de remitente que NO funcionan para SMTP relay arbitrario:
+- `noreply@resend.dev` → rechazada (no es tuya)
+- `onboarding@resend.dev` → solo válida para la API HTTP de Resend, **no para SMTP relay**
+
+---
+
+### Solución inmediata — Deshabilitar SMTP de Resend
+
+**Supabase Dashboard → Project Settings → Auth → SMTP Settings → desactivar "Enable Custom SMTP"**
+
+Eso es todo. El registro funciona para cualquier Gmail de inmediato.
+
+- Límite: ~3 emails/hora por proyecto (free tier)
+- Los emails pueden llegar a Spam/Promociones en Gmail
+- Suficiente para desarrollo y testing
+
+---
+
+### Solución para producción — Verificar dominio en Resend
+
+Cuando tengas un dominio propio (ej: `tufunkostore.com`):
+
+1. **Resend Dashboard → Domains → Add Domain** → ingresar el dominio
+2. Resend te muestra registros DNS (DKIM, SPF, DMARC) — agregarlos en tu proveedor de dominio
+3. Esperar verificación (5-15 minutos)
+4. **Supabase Dashboard → Project Settings → Auth → SMTP Settings:**
 ```
 Enable Custom SMTP: ✅
 Host:               smtp.resend.com
 Port:               465
 Username:           resend
 Password:           re_xxxxx  ← tu API key de Resend
-Sender email:       VER TABLA ABAJO  ← ⚠️ crítico
+Sender email:       noreply@tu-dominio.com
 Sender name:        FunkoStore
 ```
 
-#### ⚠️ CRÍTICO — Dirección de envío (Sender email) en Resend
+Dominios baratos: Cloudflare Registrar (~$8/año), Namecheap (~$10/año).
 
-Resend NO permite usar cualquier dirección `@resend.dev` como remitente.
-Solo funcionan estas dos opciones:
+---
 
-| Situación | Sender email | Notas |
-|-----------|-------------|-------|
-| **Testing / desarrollo** | `onboarding@resend.dev` | Pre-autorizado por Resend. Envía a cualquier email. |
-| **Producción** | `noreply@tu-dominio.com` | Requiere verificar tu dominio en Resend primero. |
+### Alternativa sin dominio — Brevo (ex-Sendinblue)
 
-> ❌ **`noreply@resend.dev` NO funciona** — Resend rechaza el envío y
-> Supabase devuelve `"Error sending confirmation email"`, lo cual bloquea
-> el registro de nuevos usuarios.
+Brevo no requiere dominio verificado. 300 emails/día gratis:
 
-**Para producción:** Agregar y verificar tu dominio en Resend Dashboard → Domains,
-luego cambiar el `Sender email` a `noreply@tu-dominio.com`.
+```
+Enable Custom SMTP: ✅
+Host:               smtp-relay.brevo.com
+Port:               587
+Username:           tu-cuenta@gmail.com  (email de registro en Brevo)
+Password:           API key de Brevo (Brevo Dashboard → SMTP & API → API Keys)
+Sender email:       noreply@tu-dominio.com  (o cualquier email verificado en Brevo)
+Sender name:        FunkoStore
+```
 
-### Otras opciones válidas
-
-| Servicio | Free tier | Configuración |
-|----------|-----------|---------------|
-| Resend.com | 3.000/mes | `smtp.resend.com:465` |
-| SendGrid | 100/día | `smtp.sendgrid.net:587` |
-| Mailgun | 1.000/mes (trial) | `smtp.mailgun.org:587` |
-| Brevo (ex-Sendinblue) | 300/día | `smtp-relay.brevo.com:587` |
-
-> **Sin SMTP propio:** los emails de recovery NO llegan a Gmail de forma confiable.
+1. Crear cuenta en brevo.com
+2. Dashboard → SMTP & API → SMTP → obtener credenciales
+3. Configurar en Supabase como arriba
 
 ---
 
