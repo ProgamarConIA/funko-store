@@ -202,9 +202,10 @@ export default function RegisterPage() {
             setStep('otp')
             setResendCooldown(60)
           } else {
-            // ❌ resend falló con error distinto de rate-limit → no hay challenge
-            // Mostrar error genérico de rate-limit (no tiene sentido mostrar OTP)
-            setError('Demasiados intentos. Esperá unos minutos e intentá de nuevo.')
+            // ❌ resend falló con error distinto de rate-limit.
+            // Puede ser: usuario no existe (IP rate-limit en signUp) o error SMTP real.
+            // Usar translateSignUpError para dar el mensaje más preciso posible.
+            setError(translateSignUpError(resendErr.message))
           }
           setLoading(false)
           return

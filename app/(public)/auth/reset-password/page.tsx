@@ -14,6 +14,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { translateAuthError } from '@/lib/supabase/errors'
 import Link from 'next/link'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
@@ -72,10 +73,13 @@ export default function ResetPasswordPage() {
       if (updateError) {
         const m = updateError.message.toLowerCase()
         if (m.includes('session') || m.includes('not authenticated') || m.includes('expired')) {
+          // Sesión de recovery inválida o expirada → mostrar pantalla de link inválido
           setError('La sesión expiró. Solicitá un nuevo link de recuperación.')
           setHasSession(false)
         } else {
-          setError('No se pudo actualizar la contraseña. Intentá de nuevo.')
+          // Otros errores (contraseña débil, igual a la anterior, error SMTP, etc.)
+          // → usar traductor para mostrar el mensaje más preciso disponible
+          setError(translateAuthError(updateError.message))
         }
         setLoading(false)
         return

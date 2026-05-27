@@ -2,6 +2,9 @@
  * Traduce los mensajes de error de Supabase Auth a español claro.
  * Supabase devuelve mensajes en inglés con códigos específicos —
  * este helper los convierte en mensajes amigables para el usuario.
+ *
+ * Orden de chequeo: de más específico a más genérico.
+ * Los patrones SMTP (custom provider) van antes del fallback genérico.
  */
 export function translateAuthError(message: string): string {
   const m = message.toLowerCase()
@@ -55,13 +58,45 @@ export function translateAuthError(message: string): string {
     return 'Ya existe una cuenta con este email. Intentá iniciar sesión.'
   }
 
+  // ── Contraseña igual a la anterior ───────────────────────────
+  // Supabase devuelve esto cuando updateUser({ password }) recibe la misma contraseña.
+  if (
+    m.includes('different from the old password') ||
+    m.includes('same as the old password') ||
+    m.includes('new password should be different')
+  ) {
+    return 'La nueva contraseña debe ser diferente a la actual.'
+  }
+
   // ── Contraseña débil ─────────────────────────────────────────
   if (
     m.includes('weak_password') ||
     m.includes('password should be') ||
-    m.includes('password is too short')
+    m.includes('password is too short') ||
+    m.includes('password should contain')
   ) {
-    return 'La contraseña es demasiado débil. Usá al menos 6 caracteres.'
+    return 'La contraseña es demasiado débil. Usá al menos 6 caracteres con letras y números.'
+  }
+
+  // ── Errores de entrega de email (SMTP / proveedor externo) ────
+  // Se detectan cuando Supabase propaga errores del SMTP personalizado
+  // (ej: Resend con API key inválida, dominio no verificado, cuota agotada).
+  // Van ANTES del fallback genérico para dar un mensaje más útil.
+  if (
+    m.includes('error sending') ||
+    m.includes('failed to send') ||
+    m.includes('unable to send') ||
+    m.includes('email delivery') ||
+    (m.includes('smtp') && (
+      m.includes('auth') ||
+      m.includes('connect') ||
+      m.includes('refused') ||
+      m.includes('timeout') ||
+      m.includes('unauthorized') ||
+      m.includes('forbidden')
+    ))
+  ) {
+    return 'No se pudo enviar el email. Verificá que la dirección sea válida e intentá en unos minutos.'
   }
 
   // ── Registro deshabilitado ───────────────────────────────────
@@ -91,6 +126,10 @@ export function translateAuthError(message: string): string {
 
 /**
  * Devuelve true si el mensaje es un rate-limit de cualquier tipo.
+ *
+ * Cubre los formatos conocidos de Supabase/GoTrue.
+ * NOTA: "too many requests" sin calificador también se incluye porque
+ * Supabase usa ese texto para su propio rate-limiting de requests.
  */
 export function isRateLimitError(message: string): boolean {
   const m = message.toLowerCase()
