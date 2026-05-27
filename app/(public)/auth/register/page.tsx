@@ -11,17 +11,29 @@
  *   Authentication → Email Templates → "Confirm signup"
  *   El template debe incluir {{ .Token }} para mostrar el código OTP.
  *   Ver supabase/email-templates/confirm-signup.html como referencia.
+ *
+ * ─── Casos cubiertos ──────────────────────────────────────────────
+ *
+ *  A) Usuario nuevo               → OTP enviado, mostrar pantalla OTP
+ *  B) Email ya confirmado         → error claro, no se envía nada
+ *  C) Email pendiente (sin OTP)   → Supabase reenvía OTP, pantalla OTP
+ *  D) Rate-limit en signUp()      → OTP ya fue enviado antes,
+ *                                   mostrar pantalla OTP con aviso
+ *  E) Rate-limit en resend()      → mensaje suave + cooldown extendido
+ *  F) OTP expirado                → error específico + prompt reenvío
+ *  G) OTP incorrecto              → error + limpiar inputs
+ *  H) Usuario abandona flujo OTP  → "← Usar otro email" resetea todo
  */
 
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { translateAuthError, translateSignUpError } from '@/lib/supabase/errors'
+import { translateAuthError, translateSignUpError, isRateLimitError } from '@/lib/supabase/errors'
 import { validateEmail } from '@/lib/emailValidation'
 import Link from 'next/link'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import OTPInput from '@/components/ui/OTPInput'
-import { Mail, Lock, User, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react'
+import { Mail, Lock, User, CheckCircle, AlertCircle, RefreshCw, Info } from 'lucide-react'
 
 type Step = 'form' | 'otp' | 'verified'
 
@@ -43,11 +55,13 @@ export default function RegisterPage() {
   const inFlight = useRef(false)
 
   // ── Estado del OTP ────────────────────────────────────────────
-  const [otpError, setOtpError]         = useState('')
-  const [otpLoading, setOtpLoading]     = useState(false)
-  const [otpKey, setOtpKey]             = useState(0)   // remonta OTPInput para limpiar al error
-  const [resendLoading, setResendLoading] = useState(false)
+  const [otpError, setOtpError]             = useState('')
+  const [otpLoading, setOtpLoading]         = useState(false)
+  const [otpKey, setOtpKey]                 = useState(0)      // remonta OTPInput para limpiar al error
+  const [resendLoading, setResendLoading]   = useState(false)
   const [resendCooldown, setResendCooldown] = useState(0)
+  // True cuando llegamos al OTP por rate-limit: el código ya fue enviado antes
+  const [otpPreviouslySent, setOtpPreviouslySent] = useState(false)
 
   // Countdown para reenvío (decrementa cada segundo)
   useEffect(() => {
@@ -60,6 +74,20 @@ export default function RegisterPage() {
     (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm(prev => ({ ...prev, [field]: e.target.value }))
 
+  /**
+   * Vuelve al formulario reseteando TODOS los estados relacionados con OTP.
+   * Usado en el botón "← Usar otro email".
+   */
+  const goBackToForm = () => {
+    setStep('form')
+    setError('')
+    setOtpError('')
+    setOtpPreviouslySent(false)
+    setResendCooldown(0)
+    setOtpKey(k => k + 1)     // limpia los inputs físicamente
+    setOtpLoading(false)
+  }
+
   // ═══════════════════════════════════════════════════════════════
   //  PASO 1 — Envío del formulario
   // ═══════════════════════════════════════════════════════════════
@@ -69,7 +97,7 @@ export default function RegisterPage() {
     inFlight.current = true
     setError('')
 
-    // Validaciones síncronas
+    // ── Validaciones síncronas ────────────────────────────────────
     if (form.password !== form.confirm) {
       setError('Las contraseñas no coinciden.')
       inFlight.current = false
@@ -84,7 +112,7 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      // Validación de email (formato + blocklist + MX record)
+      // ── Validación async de email (blocklist + MX) ────────────
       setLoadingMsg('Verificando email...')
       const emailCheck = await validateEmail(form.email)
       if (!emailCheck.valid) {
@@ -100,30 +128,59 @@ export default function RegisterPage() {
         password: form.password,
         options: {
           data: { full_name: form.full_name.trim() },
-          // Fallback por si el usuario llega vía link en lugar de OTP
+          // Fallback: si el usuario llega al link del email en lugar de ingresar el OTP
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
 
+      // ── Manejo de errores de Supabase ──────────────────────────
       if (authError) {
+        if (isRateLimitError(authError.message)) {
+          // Rate-limit significa que este email ya tiene un OTP enviado.
+          // En lugar de mostrar error, llevamos al usuario a la pantalla OTP
+          // para que ingrese el código que ya recibió (o espere para reenviar).
+          setOtpPreviouslySent(true)
+          setStep('otp')
+          setResendCooldown(60)
+          setLoading(false)
+          return
+        }
         setError(translateSignUpError(authError.message))
         setLoading(false)
         return
       }
 
+      // ── Respuesta exitosa de Supabase ──────────────────────────
+      if (!data.user) {
+        setError('No se pudo crear la cuenta. Intentá de nuevo.')
+        setLoading(false)
+        return
+      }
+
+      // identities vacío o inexistente = email ya confirmado en Supabase
+      // (Supabase retorna el "ghost user" con identities: [] para no revelar
+      //  si el email existe, pero el campo es distinguible)
+      if (!data.user.identities?.length) {
+        setError(
+          'Ya existe una cuenta con este email. ' +
+          'Iniciá sesión o usá "¿Olvidaste tu contraseña?" para recuperarla.'
+        )
+        setLoading(false)
+        return
+      }
+
       if (data.session) {
-        // Confirmación deshabilitada en Supabase → sesión inmediata
+        // Confirmación de email deshabilitada en Supabase → sesión inmediata
         setStep('verified')
         setTimeout(() => { window.location.href = '/' }, 2_000)
-      } else if (data.user?.identities?.length === 0) {
-        // Email ya registrado (Supabase no expone esto directamente, pero a veces sí)
-        setError('Ya existe una cuenta con este email. Intentá iniciar sesión.')
-        setLoading(false)
-      } else {
-        // Flujo normal: Supabase envió el email con el código OTP
-        setStep('otp')
-        setResendCooldown(60)
+        return
       }
+
+      // Caso normal: confirmación de email requerida, OTP enviado
+      setOtpPreviouslySent(false)
+      setStep('otp')
+      setResendCooldown(60)
+
     } finally {
       inFlight.current = false
     }
@@ -140,7 +197,7 @@ export default function RegisterPage() {
     const { error } = await supabase.auth.verifyOtp({
       email: form.email.trim().toLowerCase(),
       token: code,
-      type:  'email',   // 'email' verifica tokens de confirmación de signup
+      type:  'email',   // 'email' = confirmación de signup via OTP
     })
 
     if (error) {
@@ -150,20 +207,22 @@ export default function RegisterPage() {
           ? 'El código expiró. Hacé click en "Reenviar código" para obtener uno nuevo.'
           : m.includes('invalid') || m.includes('incorrect') || m.includes('not found')
             ? 'Código incorrecto. Verificá los dígitos e intentá de nuevo.'
-            : translateAuthError(error.message)
+            : isRateLimitError(error.message)
+              ? 'Demasiados intentos. Esperá un momento antes de volver a intentar.'
+              : translateAuthError(error.message)
       )
-      setOtpKey(k => k + 1)   // limpia los inputs
+      setOtpKey(k => k + 1)   // limpia los inputs para nueva entrada
       setOtpLoading(false)
       return
     }
 
-    // ✅ Verificación exitosa — Supabase creó la sesión
+    // ✅ Verificación exitosa — Supabase creó la sesión automáticamente
     setStep('verified')
     setTimeout(() => { window.location.href = '/' }, 2_000)
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  Reenvío del código
+  //  Reenvío del código OTP
   // ═══════════════════════════════════════════════════════════════
   const handleResend = async () => {
     if (resendCooldown > 0 || resendLoading) return
@@ -179,8 +238,15 @@ export default function RegisterPage() {
     setResendLoading(false)
 
     if (error) {
-      setOtpError(translateSignUpError(error.message))
+      if (isRateLimitError(error.message)) {
+        // Supabase rate-limitó el reenvío: el código anterior sigue vigente
+        setOtpError('El código anterior sigue activo. Esperá 1 minuto antes de pedir otro.')
+        setResendCooldown(60)   // resetear countdown para sincronizar con Supabase
+      } else {
+        setOtpError(translateSignUpError(error.message))
+      }
     } else {
+      setOtpPreviouslySent(false)   // el nuevo código ya no es "el de antes"
       setResendCooldown(60)
     }
   }
@@ -228,13 +294,26 @@ export default function RegisterPage() {
               <div>
                 <h2 className="text-xl font-bold text-[#0F0F14]">Verificá tu email</h2>
                 <p className="text-[#6B6B7B] text-sm mt-1.5 leading-relaxed">
-                  Enviamos un código de 8 dígitos a
+                  {otpPreviouslySent
+                    ? 'Ya enviamos un código a'
+                    : 'Enviamos un código de 8 dígitos a'}
                 </p>
                 <p className="font-semibold text-[#0F0F14] text-sm mt-0.5 break-all">
                   {form.email}
                 </p>
               </div>
             </div>
+
+            {/* Info: código enviado previamente (caso rate-limit en signUp) */}
+            {otpPreviouslySent && !otpError && (
+              <div className="flex items-start gap-2.5 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm">
+                <Info className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>
+                  Ingresá el código que ya recibiste en tu email.
+                  Si no llegó, esperá 1 minuto para reenviar.
+                </span>
+              </div>
+            )}
 
             {/* Inputs OTP */}
             <OTPInput
@@ -286,12 +365,13 @@ export default function RegisterPage() {
             {/* Volver al formulario */}
             <div className="pt-3 border-t border-[#F0EFF8] text-center">
               <button
-                onClick={() => { setStep('form'); setError(''); setOtpError('') }}
+                onClick={goBackToForm}
                 className="text-xs text-[#B0B0BE] hover:text-[#6B6B7B] transition-colors"
               >
                 ← Usar otro email
               </button>
             </div>
+
           </div>
         </div>
       </div>
