@@ -2,7 +2,6 @@ import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import ProductCard from '@/components/products/ProductCard'
 import SearchBar from '@/components/products/SearchBar'
-import HeroShowcase from '@/components/home/HeroShowcase'
 import FranchiseBanner from '@/components/home/FranchiseBanner'
 import Pagination from '@/components/ui/Pagination'
 import { PageLoader } from '@/components/ui/Spinner'
@@ -132,48 +131,108 @@ export default async function HomePage({ searchParams }: PageProps) {
           count={total}
         />
       ) : (
-        <section className="relative overflow-hidden border-b border-[#E0DFFA] dark:border-[#1e1e35] bg-[#F8F7FF] dark:bg-[#0e0e16]">
-          <div className="absolute inset-0 gradient-hero pointer-events-none" />
+        <section
+          className="relative overflow-hidden border-b border-white/5"
+          style={{
+            background: 'linear-gradient(135deg,#030010 0%,#0a0520 45%,#100830 75%,#05020f 100%)',
+            minHeight: '470px',
+          }}
+        >
+          {/* Patrón de puntos */}
+          <div className="absolute inset-0 pointer-events-none" style={{
+            backgroundImage: 'radial-gradient(circle,rgba(88,86,214,.20) 1.5px,transparent 1.5px)',
+            backgroundSize: '32px 32px',
+          }} />
 
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col lg:flex-row items-center lg:items-end gap-8 py-14 lg:pt-10 lg:pb-0">
+          {/* Vignette vertical */}
+          <div className="absolute inset-0 pointer-events-none" style={{
+            background: 'linear-gradient(to bottom,rgba(0,0,0,.60) 0%,transparent 16%,transparent 64%,rgba(0,0,0,.75) 100%)',
+          }} />
 
-              {/* Texto */}
-              <div className="flex-1 text-center lg:text-left lg:pb-10">
-                <span className="inline-block px-3.5 py-1.5 bg-[#EEEDFF] dark:bg-[#5856D6]/20 text-[#5856D6] text-xs font-bold rounded-full mb-5 tracking-widest uppercase">
-                  🎯 Coleccionables Originales
-                </span>
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#0F0F14] dark:text-[#f1f0ff] leading-[1.08] mb-4">
-                  Tu colección de<br />
-                  <span className="text-[#5856D6]">Funko Pops.</span>
-                </h1>
-                <p className="text-[#6B6B7B] dark:text-[#9090aa] text-base sm:text-lg max-w-md mx-auto lg:mx-0 mb-8">
-                  Más de{' '}
-                  <strong className="text-[#0F0F14] dark:text-[#f1f0ff]">{total} figuras</strong>{' '}
-                  originales de Marvel, DC, Disney, Anime y mucho más.
-                </p>
+          {/* Degradado lateral izquierdo */}
+          <div className="absolute inset-0 pointer-events-none" style={{
+            background: 'linear-gradient(90deg,rgba(0,0,0,.88) 0%,rgba(0,0,0,.55) 32%,rgba(0,0,0,.15) 52%,transparent 65%)',
+          }} />
 
-                {/* Pills de franquicia */}
-                <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
-                  {FRANCHISE_PILLS.map((pill) => (
+          {/* Resplandor de acento derecho */}
+          <div className="absolute right-0 top-0 bottom-0 w-2/3 pointer-events-none" style={{
+            background: 'radial-gradient(ellipse at 78% 55%, rgba(88,86,214,.40) 0%, transparent 55%)',
+          }} />
+          <div className="absolute inset-0 pointer-events-none" style={{
+            background: 'radial-gradient(ellipse at 60% 50%, rgba(88,86,214,.18) 0%, transparent 60%)',
+          }} />
+
+          <div
+            className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-stretch"
+            style={{ minHeight: '470px' }}
+          >
+            <div className="flex-1 flex flex-col justify-center py-14 z-10 max-w-2xl">
+
+              <span
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-bold rounded-full mb-5 tracking-widest uppercase w-fit"
+                style={{
+                  background: 'rgba(88,86,214,.18)',
+                  color: '#A8A5FF',
+                  border: '1px solid rgba(88,86,214,.40)',
+                }}
+              >
+                🎯 Coleccionables Originales
+              </span>
+
+              <h1
+                className="font-extrabold tracking-tight text-white leading-[1.03] mb-2"
+                style={{ fontSize: 'clamp(2.4rem,5vw,3.8rem)' }}
+              >
+                Tu colección de<br />
+                <span style={{ color: '#A8A5FF' }}>Funko Pops.</span>
+              </h1>
+
+              <p
+                className="font-light mb-4 tracking-wide"
+                style={{ fontSize: 'clamp(1.2rem,2.5vw,1.8rem)', color: 'rgba(255,255,255,.28)' }}
+              >
+                Funko Pops
+              </p>
+
+              <p
+                className="max-w-sm mb-6 leading-relaxed"
+                style={{ fontSize: 'clamp(.85rem,1.5vw,1rem)', color: 'rgba(255,255,255,.50)' }}
+              >
+                Más de{' '}
+                <strong style={{ color: 'rgba(255,255,255,.85)' }}>{total} figuras</strong>{' '}
+                originales de Marvel, DC, Disney, Anime y mucho más.
+              </p>
+
+              <div
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-8 w-fit"
+                style={{
+                  background: 'rgba(88,86,214,.18)',
+                  color: '#A8A5FF',
+                  border: '1px solid rgba(88,86,214,.40)',
+                }}
+              >
+                <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#5856D6' }} />
+                {total} figura{total !== 1 ? 's' : ''} disponible{total !== 1 ? 's' : ''}
+              </div>
+
+              {/* Pills de franquicia */}
+              <div className="flex flex-wrap gap-2">
+                {FRANCHISE_PILLS.map((pill) => {
+                  const isActive = activeFranchise === (pill.label === 'Todos' ? '' : pill.label)
+                  return (
                     <Link
                       key={pill.href}
                       href={pill.href}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium border ${
-                        activeFranchise === (pill.label === 'Todos' ? '' : pill.label)
-                          ? 'bg-[#0F0F14] dark:bg-[#f1f0ff] text-white dark:text-[#0F0F14] border-[#0F0F14] dark:border-[#f1f0ff] shadow-sm'
-                          : 'bg-white/80 dark:bg-[#12121f] text-[#6B6B7B] dark:text-[#9090aa] border-[#E4E4EC] dark:border-[#1e1e35] hover:border-[#5856D6]/50 hover:text-[#5856D6] hover:bg-[#F5F4FF] dark:hover:bg-[#1e1e35]'
-                      }`}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200"
+                      style={isActive
+                        ? { background: '#5856D6', color: '#fff', boxShadow: '0 0 18px rgba(88,86,214,.55)' }
+                        : { background: 'rgba(255,255,255,.07)', color: 'rgba(255,255,255,.44)', border: '1px solid rgba(255,255,255,.12)' }
+                      }
                     >
-                      <span>{pill.emoji}</span> {pill.label}
+                      <span>{pill.emoji}</span>{' '}{pill.label}
                     </Link>
-                  ))}
-                </div>
-              </div>
-
-              {/* Showcase de Funko Pops */}
-              <div className="w-full lg:w-auto lg:flex-shrink-0">
-                <HeroShowcase franchise={activeFranchise} />
+                  )
+                })}
               </div>
             </div>
           </div>
