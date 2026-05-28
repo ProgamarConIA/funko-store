@@ -1,17 +1,37 @@
-'use client'
+/**
+ * FranchiseBanner — hero temático por franquicia.
+ *
+ * El lado derecho (desktop) muestra CharacterTrio con los 3 personajes
+ * representativos de cada universo.
+ *
+ * Imágenes:
+ *   Formato : PNG con fondo transparente, 400×600 px mínimo
+ *   Ruta    : /public/characters/{universo}/{personaje}.png
+ *   Fallback: emoji definido en `images.*` de cada tema (se activa si la imagen no carga)
+ *
+ * Fuentes recomendadas para las imágenes:
+ *   • Marvel     → press.marvel.com  (press kit oficial)
+ *   • DC         → dccomics.com/media (assets de prensa)
+ *   • Disney     → disneyplus.com press kit / studio.helloworld.com
+ *   • Anime      → assets de Bandai Namco / Toei Animation press kit
+ *   • Star Wars  → starwars.com/databank (imágenes de personajes)
+ *   • HP         → wizardingworld.com/explore-the-story (renders oficiales)
+ *   • Juegos     → press.nintendo.com / news.xbox.com (press kits oficiales)
+ *
+ * ⚠️  NO usar imágenes de terceros sin licencia. Los press kits oficiales
+ *     incluyen assets de alta resolución con fondo transparente listos para usar.
+ */
 
 import Link from 'next/link'
-import { useState } from 'react'
+import CharacterTrio, { type CharacterSlot } from './CharacterTrio'
 
 /* ─────────────────────────────────────────────────────────────────
    Tipos
 ───────────────────────────────────────────────────────────────── */
-interface CharCard {
-  name:   string
-  role:   string
-  icon:   string          // emoji icono principal
-  badge?: string          // texto extra (ej: "No. 1")
-  size:   'sm' | 'lg'
+interface CharacterImages {
+  left:   CharacterSlot
+  center: CharacterSlot
+  right:  CharacterSlot
 }
 
 interface Theme {
@@ -21,12 +41,15 @@ interface Theme {
   bg:         string
   accent:     string
   rgb:        string
+  accentDark: string
   pattern:    React.CSSProperties
-  chars:      CharCard[]
   chipBg:     string
   chipColor:  string
   chipBorder: string
-  accentDark: string      // version oscura del acento para gradientes
+  /** Color base más oscuro del bg — usado para el fade inferior del CharacterTrio */
+  bgBase:     string
+  /** Imágenes de los 3 personajes. Fallback a emoji si el archivo no existe. */
+  images:     CharacterImages
 }
 
 type FKey = 'Marvel' | 'DC' | 'Disney' | 'Anime' | 'Star Wars' | 'Harry Potter' | 'Juegos'
@@ -45,12 +68,16 @@ const THEMES: Record<FKey, Theme> = {
       backgroundImage: 'radial-gradient(circle,rgba(232,41,60,.18) 1.5px,transparent 1.5px)',
       backgroundSize: '28px 28px',
     },
-    chars: [
-      { name: 'Spider-Man',      role: 'El Hombre Araña',   icon: '🕷️', badge: '#39',  size: 'sm' },
-      { name: 'Iron Man',        role: 'Tony Stark',        icon: '⚙️', badge: '#285', size: 'lg' },
-      { name: 'Capitán América', role: 'Steve Rogers',      icon: '🛡️', badge: '#10',  size: 'sm' },
-    ],
     chipBg: 'rgba(232,41,60,.18)', chipColor: '#FF8090', chipBorder: 'rgba(232,41,60,.40)',
+    bgBase: '#060000',
+    images: {
+      // /public/characters/marvel/iron-man.png — Iron Man render PNG transparente
+      left:   { src: '/characters/marvel/iron-man.png',   alt: 'Iron Man',   emoji: '⚙️' },
+      // /public/characters/marvel/spider-man.png
+      center: { src: '/characters/marvel/spider-man.png', alt: 'Spider-Man', emoji: '🕷️' },
+      // /public/characters/marvel/wolverine.png
+      right:  { src: '/characters/marvel/wolverine.png',  alt: 'Wolverine',  emoji: '🦁' },
+    },
   },
 
   DC: {
@@ -64,12 +91,13 @@ const THEMES: Record<FKey, Theme> = {
         'linear-gradient(90deg,rgba(30,144,255,.08) 1px,transparent 1px)',
       backgroundSize: '44px 44px',
     },
-    chars: [
-      { name: 'The Flash',  role: 'El Velocista Escarlata', icon: '⚡', badge: '#713', size: 'sm' },
-      { name: 'Batman',     role: 'El Caballero Oscuro',    icon: '🦇', badge: '#01',  size: 'lg' },
-      { name: 'Superman',   role: 'El Hombre de Acero',     icon: '🔵', badge: '#01',  size: 'sm' },
-    ],
     chipBg: 'rgba(30,144,255,.14)', chipColor: '#72B8FF', chipBorder: 'rgba(30,144,255,.35)',
+    bgBase: '#000207',
+    images: {
+      left:   { src: '/characters/dc/batman.png',   alt: 'Batman',    emoji: '🦇' },
+      center: { src: '/characters/dc/superman.png', alt: 'Superman',  emoji: '🔵' },
+      right:  { src: '/characters/dc/flash.png',    alt: 'The Flash', emoji: '⚡' },
+    },
   },
 
   Disney: {
@@ -84,12 +112,13 @@ const THEMES: Record<FKey, Theme> = {
       backgroundSize: '54px 54px,27px 27px',
       backgroundPosition: '0 0,27px 27px',
     },
-    chars: [
-      { name: 'Mickey Mouse',   role: 'El Ratón Más Famoso', icon: '🐭', badge: '#01',  size: 'sm' },
-      { name: 'Stitch',         role: 'Experimento 626',     icon: '💙', badge: '#159', size: 'lg' },
-      { name: 'Buzz Lightyear', role: 'Al Infinito y Más',   icon: '🚀', badge: '#168', size: 'sm' },
-    ],
     chipBg: 'rgba(255,215,0,.14)', chipColor: '#FFE57A', chipBorder: 'rgba(255,215,0,.35)',
+    bgBase: '#010218',
+    images: {
+      left:   { src: '/characters/disney/mickey.png',         alt: 'Mickey Mouse',   emoji: '🐭' },
+      center: { src: '/characters/disney/stitch.png',         alt: 'Stitch',         emoji: '💙' },
+      right:  { src: '/characters/disney/buzz-lightyear.png', alt: 'Buzz Lightyear', emoji: '🚀' },
+    },
   },
 
   Anime: {
@@ -101,12 +130,13 @@ const THEMES: Record<FKey, Theme> = {
       backgroundImage:
         'repeating-linear-gradient(-45deg,rgba(255,107,107,.07),rgba(255,107,107,.07) 1px,transparent 1px,transparent 18px)',
     },
-    chars: [
-      { name: 'Naruto',  role: 'Hokage de Konoha',    icon: '🍥', badge: '#727', size: 'sm' },
-      { name: 'Goku',    role: 'Super Saiyan',         icon: '🔥', badge: '#858', size: 'lg' },
-      { name: 'Luffy',   role: 'Rey de los Piratas',   icon: '⚓', badge: '#924', size: 'sm' },
-    ],
     chipBg: 'rgba(255,107,107,.18)', chipColor: '#FF9999', chipBorder: 'rgba(255,107,107,.40)',
+    bgBase: '#080012',
+    images: {
+      left:   { src: '/characters/anime/naruto.png', alt: 'Naruto', emoji: '🍥' },
+      center: { src: '/characters/anime/goku.png',   alt: 'Goku',   emoji: '🔥' },
+      right:  { src: '/characters/anime/luffy.png',  alt: 'Luffy',  emoji: '⚓' },
+    },
   },
 
   'Star Wars': {
@@ -121,12 +151,13 @@ const THEMES: Record<FKey, Theme> = {
       backgroundSize: '64px 64px,100px 100px',
       backgroundPosition: '15px 20px,55px 75px',
     },
-    chars: [
-      { name: 'Luke Skywalker', role: 'Caballero Jedi',  icon: '⚔️', badge: '#01',  size: 'sm' },
-      { name: 'Darth Vader',    role: 'Señor Sith',      icon: '🔴', badge: '#01',  size: 'lg' },
-      { name: 'Mandalorian',    role: 'Din Djarin',       icon: '🪖', badge: '#326', size: 'sm' },
-    ],
     chipBg: 'rgba(65,105,225,.15)', chipColor: '#88AAFF', chipBorder: 'rgba(65,105,225,.35)',
+    bgBase: '#000103',
+    images: {
+      left:   { src: '/characters/star-wars/luke.png',        alt: 'Luke Skywalker', emoji: '⚔️' },
+      center: { src: '/characters/star-wars/darth-vader.png', alt: 'Darth Vader',    emoji: '🔴' },
+      right:  { src: '/characters/star-wars/mandalorian.png', alt: 'Mandalorian',    emoji: '🪖' },
+    },
   },
 
   'Harry Potter': {
@@ -138,12 +169,13 @@ const THEMES: Record<FKey, Theme> = {
       backgroundImage: 'radial-gradient(ellipse,rgba(197,160,40,.18) 1.5px,transparent 1.5px)',
       backgroundSize: '38px 38px',
     },
-    chars: [
-      { name: 'Voldemort',    role: 'El Señor Tenebroso', icon: '💀', badge: '#5',  size: 'sm' },
-      { name: 'Harry Potter', role: 'El Elegido',          icon: '⚡', badge: '#01', size: 'lg' },
-      { name: 'Hermione',     role: 'La Más Inteligente',  icon: '📚', badge: '#03', size: 'sm' },
-    ],
     chipBg: 'rgba(197,160,40,.14)', chipColor: '#DDBB55', chipBorder: 'rgba(197,160,40,.35)',
+    bgBase: '#030210',
+    images: {
+      left:   { src: '/characters/hp/voldemort.png',     alt: 'Voldemort',    emoji: '💀' },
+      center: { src: '/characters/hp/harry-potter.png',  alt: 'Harry Potter', emoji: '⚡' },
+      right:  { src: '/characters/hp/hermione.png',      alt: 'Hermione',     emoji: '📚' },
+    },
   },
 
   Juegos: {
@@ -157,12 +189,13 @@ const THEMES: Record<FKey, Theme> = {
         'linear-gradient(90deg,rgba(0,230,118,.08) 1px,transparent 1px)',
       backgroundSize: '22px 22px',
     },
-    chars: [
-      { name: 'Kratos',       role: 'Dios de la Guerra',  icon: '🪓', badge: '#269', size: 'sm' },
-      { name: 'Master Chief', role: 'SPARTAN-117',         icon: '🪖', badge: '#06',  size: 'lg' },
-      { name: 'Mario',        role: 'Super Mario Bros',    icon: '⭐', badge: 'Chase', size: 'sm' },
-    ],
     chipBg: 'rgba(0,230,118,.12)', chipColor: '#66FFB3', chipBorder: 'rgba(0,230,118,.28)',
+    bgBase: '#010101',
+    images: {
+      left:   { src: '/characters/games/kratos.png',       alt: 'Kratos',       emoji: '🪓' },
+      center: { src: '/characters/games/master-chief.png', alt: 'Master Chief', emoji: '🪖' },
+      right:  { src: '/characters/games/mario.png',        alt: 'Mario',        emoji: '⭐' },
+    },
   },
 }
 
@@ -181,176 +214,6 @@ const PILLS = [
 ]
 
 const BANNER_H = 470
-
-/* ─────────────────────────────────────────────────────────────────
-   Tarjeta de personaje — diseño CSS cinematografico
-───────────────────────────────────────────────────────────────── */
-function CharacterCard({
-  char,
-  theme,
-  index,
-}: {
-  char:  CharCard
-  theme: Theme
-  index: number
-}) {
-  const [hovered, setHovered] = useState(false)
-  const isHero = char.size === 'lg'
-
-  const cardW = isHero ? 148 : 110
-  const cardH = isHero ? 220 : 168
-  const sinkPx = isHero ? 0 : 38
-
-  return (
-    <div
-      style={{
-        flexShrink:    0,
-        width:         `${cardW}px`,
-        alignSelf:     'flex-end',
-        marginBottom:  `${sinkPx}px`,
-        zIndex:        isHero ? 3 : 1,
-        marginLeft:    index === 0 ? 0 : '-12px',
-        position:      'relative',
-        cursor:        'default',
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {/* Glow detrás */}
-      <div style={{
-        position:   'absolute',
-        bottom:     '0',
-        left:       '50%',
-        transform:  'translateX(-50%)',
-        width:      `${cardW * 1.4}px`,
-        height:     `${cardH * 0.6}px`,
-        background: `radial-gradient(ellipse at 50% 90%, rgba(${theme.rgb},.${hovered ? '65' : '40'}) 0%, transparent 65%)`,
-        filter:     'blur(24px)',
-        zIndex:     0,
-        pointerEvents: 'none',
-        transition:    'all .4s ease',
-      }} />
-
-      {/* Tarjeta principal */}
-      <div style={{
-        width:        `${cardW}px`,
-        height:       `${cardH}px`,
-        position:     'relative',
-        zIndex:       1,
-        borderRadius: isHero ? '16px' : '12px',
-        background:   `linear-gradient(145deg, rgba(${theme.rgb},.${isHero ? '18' : '12'}) 0%, rgba(0,0,0,.${isHero ? '70' : '60'}) 100%)`,
-        border:       `1px solid rgba(${theme.rgb},.${hovered ? '60' : '28'})`,
-        boxShadow:    `0 0 ${hovered ? '28' : '16'}px rgba(${theme.rgb},.${hovered ? '35' : '18'}), inset 0 1px 0 rgba(255,255,255,.08)`,
-        display:      'flex',
-        flexDirection:'column',
-        alignItems:   'center',
-        justifyContent: 'space-between',
-        padding:      isHero ? '20px 12px 16px' : '14px 10px 12px',
-        overflow:     'hidden',
-        transition:   'border-color .3s, box-shadow .3s',
-        transform:    hovered ? `translateY(-${isHero ? 8 : 5}px)` : 'translateY(0)',
-      }}>
-
-        {/* Fondo decorativo — lineas angulares */}
-        <div style={{
-          position:    'absolute',
-          inset:       0,
-          opacity:     0.06,
-          background:  `repeating-linear-gradient(-55deg, transparent, transparent 8px, rgba(${theme.rgb},1) 8px, rgba(${theme.rgb},1) 9px)`,
-          borderRadius: 'inherit',
-          pointerEvents: 'none',
-        }} />
-
-        {/* Badge # del Funko */}
-        {char.badge && (
-          <div style={{
-            position:     'absolute',
-            top:          '8px',
-            right:        '8px',
-            fontSize:     '9px',
-            fontWeight:   800,
-            fontFamily:   'monospace',
-            color:        `rgba(${theme.rgb},.85)`,
-            background:   `rgba(${theme.rgb},.12)`,
-            border:       `1px solid rgba(${theme.rgb},.30)`,
-            borderRadius: '6px',
-            padding:      '2px 5px',
-            letterSpacing: '0.04em',
-          }}>
-            {char.badge}
-          </div>
-        )}
-
-        {/* Icono principal */}
-        <div style={{
-          fontSize:   isHero ? '64px' : '48px',
-          lineHeight: 1,
-          filter:     `drop-shadow(0 0 ${isHero ? '20' : '12'}px rgba(${theme.rgb},.70))`,
-          marginTop:  isHero ? '8px' : '4px',
-          zIndex:     1,
-          transition: 'filter .3s, transform .3s',
-          transform:  hovered ? 'scale(1.12)' : 'scale(1)',
-        }}>
-          {char.icon}
-        </div>
-
-        {/* Separador */}
-        <div style={{
-          width:     '40%',
-          height:    '1px',
-          background:`linear-gradient(90deg, transparent, rgba(${theme.rgb},.50), transparent)`,
-          margin:    '4px 0',
-        }} />
-
-        {/* Nombre + rol */}
-        <div style={{ textAlign: 'center', zIndex: 1 }}>
-          <div style={{
-            fontSize:      isHero ? '11.5px' : '9.5px',
-            fontWeight:    800,
-            color:         '#ffffff',
-            letterSpacing: '0.02em',
-            textTransform: 'uppercase',
-            lineHeight:    1.2,
-            marginBottom:  '3px',
-          }}>
-            {char.name}
-          </div>
-          <div style={{
-            fontSize:      isHero ? '9px' : '8px',
-            fontWeight:    500,
-            color:         `rgba(${theme.rgb},.80)`,
-            letterSpacing: '0.01em',
-            lineHeight:    1.3,
-          }}>
-            {char.role}
-          </div>
-        </div>
-
-        {/* Barra de acento inferior */}
-        <div style={{
-          position:     'absolute',
-          bottom:       0,
-          left:         '20%',
-          right:        '20%',
-          height:       isHero ? '3px' : '2px',
-          background:   `linear-gradient(90deg, transparent, rgba(${theme.rgb},.9), transparent)`,
-          borderRadius: '2px 2px 0 0',
-        }} />
-      </div>
-
-      {/* Sombra de piso */}
-      <div style={{
-        width:        `${cardW * 0.65}px`,
-        height:       '10px',
-        margin:       '0 auto',
-        marginTop:    '-4px',
-        background:   `radial-gradient(ellipse, rgba(${theme.rgb},.45) 0%, transparent 70%)`,
-        filter:       'blur(8px)',
-        borderRadius: '50%',
-      }} />
-    </div>
-  )
-}
 
 /* ─────────────────────────────────────────────────────────────────
    Banner principal
@@ -398,7 +261,7 @@ export default function FranchiseBanner({ franchise, activeFranchise, count }: P
         style={{ minHeight: `${BANNER_H}px` }}
       >
 
-        {/* TEXTO */}
+        {/* TEXTO ─────────────────────────────────────────────────────────── */}
         <div className="flex-1 flex flex-col justify-center py-14 z-10 pr-4 lg:pr-14">
 
           <span
@@ -448,7 +311,7 @@ export default function FranchiseBanner({ franchise, activeFranchise, count }: P
             {count} figura{count !== 1 ? 's' : ''} disponible{count !== 1 ? 's' : ''}
           </div>
 
-          {/* Pills de navegacion */}
+          {/* Pills de navegación */}
           <div className="flex flex-wrap gap-2">
             {PILLS.map((pill) => {
               const isActive = (pill.label === 'Todos' ? '' : pill.label) === activeFranchise
@@ -478,28 +341,20 @@ export default function FranchiseBanner({ franchise, activeFranchise, count }: P
           </div>
         </div>
 
-        {/* 3 TARJETAS DE PERSONAJE (solo desktop) */}
+        {/* PERSONAJES (solo desktop) ────────────────────────────────────── */}
         <div
-          className="hidden lg:flex items-end flex-shrink-0"
-          style={{
-            width:          '420px',
-            minHeight:      `${BANNER_H}px`,
-            paddingBottom:  '32px',
-            paddingLeft:    '16px',
-            paddingRight:   '16px',
-            alignItems:     'flex-end',
-            justifyContent: 'center',
-            gap:            '4px',
-          }}
+          className="hidden lg:flex items-end justify-center flex-shrink-0"
+          style={{ width: '460px', minHeight: `${BANNER_H}px` }}
         >
-          {theme.chars.map((char, i) => (
-            <CharacterCard
-              key={char.name}
-              char={char}
-              theme={theme}
-              index={i}
-            />
-          ))}
+          <CharacterTrio
+            left  ={theme.images.left}
+            center={theme.images.center}
+            right ={theme.images.right}
+            glow  ={`rgba(${theme.rgb},0.55)`}
+            fadeTo={theme.bgBase}
+            height={BANNER_H}
+            width ={460}
+          />
         </div>
 
       </div>
