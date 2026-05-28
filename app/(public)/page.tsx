@@ -173,7 +173,7 @@ export default async function HomePage({ searchParams }: PageProps) {
 
               {/* Showcase de Funko Pops */}
               <div className="w-full lg:w-auto lg:flex-shrink-0">
-                <HeroShowcase />
+                <HeroShowcase franchise={activeFranchise} />
               </div>
             </div>
           </div>

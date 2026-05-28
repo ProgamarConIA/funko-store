@@ -1,34 +1,76 @@
-/**
- * HeroShowcase — sección derecha del hero genérico (sin franquicia activa).
- *
- * Muestra un trío de personajes de Marvel como showcase por defecto.
- * Las imágenes deben colocarse en /public/characters/marvel/
- * (PNG transparente, 400×600 px mínimo).
- * Si no existen, se muestran emojis de fallback automáticamente.
- */
+import CharacterTrio, { type CharacterSlot } from './CharacterTrio'
 
-import CharacterTrio from './CharacterTrio'
+interface Trio {
+  left:   CharacterSlot
+  center: CharacterSlot
+  right:  CharacterSlot
+  glow:   string
+}
 
-// Trio por defecto — personajes Marvel icónicos
-// Reemplazar src con rutas reales una vez descargadas las imágenes
-const LEFT   = { src: '/characters/marvel/iron-man.png',   alt: 'Iron Man',   emoji: '⚙️' }
-const CENTER = { src: '/characters/marvel/spider-man.png', alt: 'Spider-Man', emoji: '🕷️' }
-const RIGHT  = { src: '/characters/marvel/wolverine.png',  alt: 'Wolverine',  emoji: '🦁' }
+const TRIOS: Record<string, Trio> = {
+  '': {
+    left:   { src: '/characters/games/mario.png',       alt: 'Mario',      emoji: '⭐' },
+    center: { src: '/characters/marvel/spider-man.png', alt: 'Spider-Man', emoji: '🕷️' },
+    right:  { src: '/characters/disney/stitch.png',     alt: 'Stitch',     emoji: '💙' },
+    glow: 'rgba(88,86,214,0.50)',
+  },
+  Marvel: {
+    left:   { src: '/characters/marvel/iron-man.png',   alt: 'Iron Man',   emoji: '⚙️' },
+    center: { src: '/characters/marvel/spider-man.png', alt: 'Spider-Man', emoji: '🕷️' },
+    right:  { src: '/characters/marvel/wolverine.png',  alt: 'Wolverine',  emoji: '🦁' },
+    glow: 'rgba(232,41,60,0.55)',
+  },
+  DC: {
+    left:   { src: '/characters/dc/batman.png',   alt: 'Batman',    emoji: '🦇' },
+    center: { src: '/characters/dc/superman.png', alt: 'Superman',  emoji: '🔵' },
+    right:  { src: '/characters/dc/flash.png',    alt: 'The Flash', emoji: '⚡' },
+    glow: 'rgba(30,144,255,0.55)',
+  },
+  Disney: {
+    left:   { src: '/characters/disney/mickey.png',         alt: 'Mickey Mouse',   emoji: '🐭' },
+    center: { src: '/characters/disney/stitch.png',         alt: 'Stitch',         emoji: '💙' },
+    right:  { src: '/characters/disney/buzz-lightyear.png', alt: 'Buzz Lightyear', emoji: '🚀' },
+    glow: 'rgba(255,215,0,0.55)',
+  },
+  Anime: {
+    left:   { src: '/characters/anime/naruto.png', alt: 'Naruto', emoji: '🍥' },
+    center: { src: '/characters/anime/goku.png',   alt: 'Goku',   emoji: '🔥' },
+    right:  { src: '/characters/anime/luffy.png',  alt: 'Luffy',  emoji: '⚓' },
+    glow: 'rgba(255,107,107,0.55)',
+  },
+  'Star Wars': {
+    left:   { src: '/characters/star-wars/luke.png',        alt: 'Luke Skywalker', emoji: '⚔️' },
+    center: { src: '/characters/star-wars/darth-vader.png', alt: 'Darth Vader',    emoji: '🔴' },
+    right:  { src: '/characters/star-wars/mandalorian.png', alt: 'Mandalorian',    emoji: '🪖' },
+    glow: 'rgba(65,105,225,0.55)',
+  },
+  'Harry Potter': {
+    left:   { src: '/characters/hp/voldemort.png',    alt: 'Voldemort',    emoji: '💀' },
+    center: { src: '/characters/hp/harry-potter.png', alt: 'Harry Potter', emoji: '⚡' },
+    right:  { src: '/characters/hp/hermione.png',     alt: 'Hermione',     emoji: '📚' },
+    glow: 'rgba(197,160,40,0.55)',
+  },
+  Juegos: {
+    left:   { src: '/characters/games/kratos.png',       alt: 'Kratos',       emoji: '🪓' },
+    center: { src: '/characters/games/master-chief.png', alt: 'Master Chief', emoji: '🪖' },
+    right:  { src: '/characters/games/mario.png',        alt: 'Mario',        emoji: '⭐' },
+    glow: 'rgba(0,230,118,0.55)',
+  },
+}
 
-// Color del glow — acento de marca (violeta)
-const GLOW   = 'rgba(88,86,214,0.50)'
+interface Props {
+  franchise?: string
+}
 
-// Debe coincidir con el bg del hero genérico: bg-[#F8F7FF] / bg: '#F8F7FF'
-const FADE   = '#F8F7FF'
-
-export default function HeroShowcase() {
+export default function HeroShowcase({ franchise = '' }: Props) {
+  const trio = TRIOS[franchise] ?? TRIOS['']
   return (
     <CharacterTrio
-      left  ={LEFT}
-      center={CENTER}
-      right ={RIGHT}
-      glow  ={GLOW}
-      fadeTo={FADE}
+      left  ={trio.left}
+      center={trio.center}
+      right ={trio.right}
+      glow  ={trio.glow}
+      fadeTo='#F8F7FF'
       height={360}
       width ={440}
     />
