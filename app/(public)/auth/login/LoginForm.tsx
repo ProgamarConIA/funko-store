@@ -198,7 +198,7 @@ export default function LoginForm() {
             <div>
               <h2 className="text-xl font-bold text-[#0F0F14]">Verificá tu email</h2>
               <p className="text-[#6B6B7B] text-sm mt-1.5">
-                {otpPreviouslySent ? 'Ya enviamos un código a' : 'Enviamos un código de 8 dígitos a'}
+                {otpPreviouslySent ? 'Ya enviamos un código a' : 'Enviamos un código de 6 dígitos a'}
               </p>
               <p className="font-semibold text-[#0F0F14] text-sm mt-0.5 break-all">
                 {pendingOtpEmail}
@@ -215,7 +215,7 @@ export default function LoginForm() {
 
           <OTPInput
             key={otpKey}
-            length={8}
+            length={6}
             onComplete={handleVerifyOTP}
             loading={otpLoading}
             hasError={!!otpError}
