@@ -136,10 +136,10 @@ export default async function HomePage({ searchParams }: PageProps) {
           <div className="absolute inset-0 gradient-hero pointer-events-none" />
 
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col lg:flex-row items-center lg:items-end gap-8 py-14 lg:py-10">
+            <div className="flex flex-col lg:flex-row items-center lg:items-end gap-8 py-14 lg:pt-10 lg:pb-0">
 
               {/* Texto */}
-              <div className="flex-1 text-center lg:text-left">
+              <div className="flex-1 text-center lg:text-left lg:pb-10">
                 <span className="inline-block px-3.5 py-1.5 bg-[#EEEDFF] dark:bg-[#5856D6]/20 text-[#5856D6] text-xs font-bold rounded-full mb-5 tracking-widest uppercase">
                   🎯 Coleccionables Originales
                 </span>

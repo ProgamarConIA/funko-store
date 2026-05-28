@@ -70,7 +70,6 @@ export default function HeroShowcase({ franchise = '' }: Props) {
       center={trio.center}
       right ={trio.right}
       glow  ={trio.glow}
-      fadeTo='#F8F7FF'
       height={360}
       width ={440}
     />
