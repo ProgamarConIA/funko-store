@@ -85,8 +85,9 @@ export default function UserDetailModal({
   // ── Helpers ──────────────────────────────────────────────────────────────────
   const initial    = (user.email?.[0] ?? '?').toUpperCase()
   const isAdmin    = user.role === 'admin'
-  const joinDate   = new Date(user.created_at).toLocaleDateString('es-AR', {
+  const joinDate   = new Date(user.created_at).toLocaleString('es-AR', {
     day: '2-digit', month: 'long', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: false,
   })
 
   return (

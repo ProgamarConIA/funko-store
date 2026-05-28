@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { formatDate, formatPrice, getOrderStatusColor, getOrderStatusLabel } from '@/lib/utils'
+import { formatDateTime, formatPrice, getOrderStatusColor, getOrderStatusLabel } from '@/lib/utils'
 import Link from 'next/link'
 import { Package, ArrowLeft, ShoppingBag } from 'lucide-react'
 
@@ -73,7 +73,7 @@ export default async function OrdersPage() {
                       <p className="font-bold text-[#0F0F14] font-mono text-sm tracking-wide">
                         #{order.id.slice(0, 8).toUpperCase()}
                       </p>
-                      <p className="text-xs text-gray-400">{formatDate(order.created_at)}</p>
+                      <p className="text-xs text-gray-400">{formatDateTime(order.created_at)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">

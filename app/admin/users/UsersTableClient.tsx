@@ -112,11 +112,18 @@ export default function UsersTableClient({ initialProfiles, callerId, adminEmail
                     </span>
                   </td>
 
-                  {/* Fecha */}
-                  <td className="px-4 py-3 text-xs text-[#B0B0BE] tabular-nums whitespace-nowrap">
-                    {new Date(profile.created_at).toLocaleDateString('es-AR', {
-                      day: '2-digit', month: 'short', year: 'numeric',
-                    })}
+                  {/* Fecha + hora */}
+                  <td className="px-4 py-3 tabular-nums whitespace-nowrap">
+                    <p className="text-xs text-[#B0B0BE]">
+                      {new Date(profile.created_at).toLocaleDateString('es-AR', {
+                        day: '2-digit', month: 'short', year: 'numeric',
+                      })}
+                    </p>
+                    <p className="text-[10px] text-[#D0D0D8] mt-0.5">
+                      {new Date(profile.created_at).toLocaleTimeString('es-AR', {
+                        hour: '2-digit', minute: '2-digit', hour12: false,
+                      })}
+                    </p>
                   </td>
 
                   {/* Pedidos */}
