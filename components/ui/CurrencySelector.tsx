@@ -60,9 +60,9 @@ export default function CurrencySelector() {
         aria-haspopup="listbox"
         aria-expanded={open}
         className="
-          flex items-center gap-1.5 rounded-lg border border-gray-200
-          bg-white px-2.5 py-1.5 text-sm font-medium text-gray-700
-          transition hover:border-[#5856D6] hover:text-[#5856D6]
+          flex items-center gap-1.5 rounded-lg border border-gray-300
+          bg-white px-2.5 py-1.5 text-sm font-medium text-[#0F0F14]
+          transition hover:border-gray-800 hover:text-[#0F0F14]
           disabled:opacity-60 select-none
         "
       >

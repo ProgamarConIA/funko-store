@@ -18,23 +18,17 @@ const NAV_LINKS = [
 ]
 
 export default function Navbar() {
-  // Selectores específicos: el Navbar solo re-renderiza cuando cambia
-  // el count del carrito o se llama toggleCart — no cuando isOpen cambia.
   const toggleCart = useCartStore((state) => state.toggleCart)
   const count = useCartStore(
     (state) => state.items.reduce((sum, i) => sum + i.quantity, 0)
   )
 
-  const [user, setUser]       = useState<SupabaseUser | null>(null)
+  const [user, setUser]         = useState<SupabaseUser | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
-  // Ref para evitar setState innecesarios en cada frame de scroll
   const scrolledRef = useRef(false)
 
-  // Supabase client: inicializado solo en el cliente para evitar que
-  // createBrowserClient (de @supabase/ssr) acceda a `location` durante
-  // el SSR de Next.js. useRef garantiza una única instancia por montaje.
   const supabaseRef = useRef<SupabaseClient | null>(null)
   if (typeof window !== 'undefined' && !supabaseRef.current) {
     supabaseRef.current = createClient()
@@ -48,18 +42,16 @@ export default function Navbar() {
       setUser(session?.user ?? null)
     })
     return () => subscription.unsubscribe()
-  }, [])  // [] correcto: supabaseRef.current es estable durante el ciclo de vida
+  }, [])
 
   useEffect(() => {
     const onScroll = () => {
       const isNowScrolled = window.scrollY > 8
-      // Solo setState si el valor realmente cambió → evita re-renders continuos
       if (isNowScrolled !== scrolledRef.current) {
         scrolledRef.current = isNowScrolled
         setScrolled(isNowScrolled)
       }
     }
-    // passive: true → el browser scrollea sin esperar al handler (no bloquea)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
@@ -70,18 +62,18 @@ export default function Navbar() {
   }
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,box-shadow,border-color] duration-300 ${
+    <header className={`fixed top-0 left-0 right-0 z-50 bg-white transition-[box-shadow,border-color] duration-300 ${
       scrolled
-        ? 'bg-white/92 dark:bg-[#0e0e16]/92 backdrop-blur-xl border-b border-[#E4E4EC] dark:border-[#1e1e35] shadow-[0_1px_12px_rgba(15,15,20,0.06)] dark:shadow-[0_1px_12px_rgba(0,0,0,.3)]'
-        : 'bg-white/70 dark:bg-[#0e0e16]/70 backdrop-blur-md'
+        ? 'border-b border-gray-200 shadow-[0_1px_12px_rgba(0,0,0,0.08)]'
+        : 'border-b border-transparent'
     }`}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-1">
-            <span className="font-bold text-xl tracking-tight text-[#0F0F14] dark:text-[#f1f0ff]">Funko</span>
-            <span className="font-light text-xl tracking-tight text-[#5856D6] dark:text-[#a88dff]">Store</span>
+            <span className="font-bold text-xl tracking-tight text-[#0F0F14]">Funko</span>
+            <span className="font-light text-xl tracking-tight text-[#0F0F14]">Store</span>
           </Link>
 
           {/* Links desktop */}
@@ -90,7 +82,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="px-3.5 py-2 text-sm text-[#6B6B7B] dark:text-[#9090aa] hover:text-[#0F0F14] dark:hover:text-[#f1f0ff] hover:bg-[#F5F4FF] dark:hover:bg-[#1e1e35] rounded-lg font-medium"
+                className="px-3.5 py-2 text-sm text-[#1a1a1a] hover:text-[#0F0F14] hover:bg-gray-100 rounded-lg font-medium"
               >
                 {link.label}
               </Link>
@@ -106,12 +98,12 @@ export default function Navbar() {
             {/* Carrito */}
             <button
               onClick={toggleCart}
-              className="relative p-2.5 rounded-xl text-[#6B6B7B] dark:text-[#9090aa] hover:text-[#0F0F14] dark:hover:text-[#f1f0ff] hover:bg-[#F5F4FF] dark:hover:bg-[#1e1e35]"
+              className="relative p-2.5 rounded-xl text-[#0F0F14] hover:bg-gray-100"
               aria-label="Abrir carrito"
             >
               <ShoppingCart className="w-5 h-5" />
               {count > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#5856D6] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 shadow-sm">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#0F0F14] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 shadow-sm">
                   {count > 9 ? '9+' : count}
                 </span>
               )}
@@ -120,12 +112,12 @@ export default function Navbar() {
             {/* Usuario desktop */}
             {user ? (
               <div className="hidden md:flex items-center">
-                <Link href="/profile" className="p-2.5 rounded-xl text-[#6B6B7B] dark:text-[#9090aa] hover:text-[#0F0F14] dark:hover:text-[#f1f0ff] hover:bg-[#F5F4FF] dark:hover:bg-[#1e1e35]">
+                <Link href="/profile" className="p-2.5 rounded-xl text-[#0F0F14] hover:bg-gray-100">
                   <User className="w-5 h-5" />
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="p-2.5 rounded-xl text-[#6B6B7B] dark:text-[#9090aa] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  className="p-2.5 rounded-xl text-[#0F0F14] hover:text-red-600 hover:bg-red-50"
                   title="Cerrar sesión"
                 >
                   <LogOut className="w-5 h-5" />
@@ -133,10 +125,10 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="hidden md:flex items-center gap-2 ml-1">
-                <Link href="/auth/login" className="px-4 py-2 text-sm text-[#6B6B7B] dark:text-[#9090aa] hover:text-[#0F0F14] dark:hover:text-[#f1f0ff] font-medium">
+                <Link href="/auth/login" className="px-4 py-2 text-sm text-[#1a1a1a] hover:text-[#0F0F14] font-medium">
                   Ingresar
                 </Link>
-                <Link href="/auth/register" className="px-4 py-2 text-sm bg-[#0F0F14] dark:bg-[#5856D6] hover:bg-[#2A2A35] dark:hover:bg-[#4644b8] text-white font-medium rounded-xl shadow-sm">
+                <Link href="/auth/register" className="px-4 py-2 text-sm bg-[#0F0F14] hover:bg-[#2A2A35] text-white font-medium rounded-xl shadow-sm">
                   Registrarse
                 </Link>
               </div>
@@ -145,7 +137,7 @@ export default function Navbar() {
             {/* Botón menú móvil */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden p-2.5 rounded-xl text-[#6B6B7B] dark:text-[#9090aa] hover:text-[#0F0F14] dark:hover:text-[#f1f0ff] hover:bg-[#F5F4FF] dark:hover:bg-[#1e1e35]"
+              className="md:hidden p-2.5 rounded-xl text-[#0F0F14] hover:bg-gray-100"
               aria-label="Menú"
             >
               {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -155,30 +147,30 @@ export default function Navbar() {
 
         {/* Menú móvil desplegable */}
         {menuOpen && (
-          <div className="md:hidden border-t border-[#E4E4EC] dark:border-[#1e1e35] py-3 space-y-0.5 animate-fade-in-up bg-white/97 dark:bg-[#0e0e16]/97">
+          <div className="md:hidden border-t border-gray-200 py-3 space-y-0.5 animate-fade-in-up bg-white">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
-                className="block px-4 py-2.5 text-sm text-[#6B6B7B] dark:text-[#9090aa] hover:text-[#0F0F14] dark:hover:text-[#f1f0ff] hover:bg-[#F5F4FF] dark:hover:bg-[#1e1e35] rounded-xl font-medium"
+                className="block px-4 py-2.5 text-sm text-[#1a1a1a] hover:text-[#0F0F14] hover:bg-gray-100 rounded-xl font-medium"
               >
                 {link.label}
               </Link>
             ))}
-            <div className="border-t border-[#E4E4EC] dark:border-[#1e1e35] pt-2 mt-2">
+            <div className="border-t border-gray-200 pt-2 mt-2">
               {user ? (
                 <>
                   <Link
                     href="/profile"
                     onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-[#6B6B7B] dark:text-[#9090aa] hover:text-[#0F0F14] dark:hover:text-[#f1f0ff] hover:bg-[#F5F4FF] dark:hover:bg-[#1e1e35] rounded-xl font-medium"
+                    className="block px-4 py-2.5 text-sm text-[#1a1a1a] hover:text-[#0F0F14] hover:bg-gray-100 rounded-xl font-medium"
                   >
                     Mi perfil
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl font-medium"
+                    className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-xl font-medium"
                   >
                     Cerrar sesión
                   </button>
@@ -188,14 +180,14 @@ export default function Navbar() {
                   <Link
                     href="/auth/login"
                     onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-[#6B6B7B] dark:text-[#9090aa] hover:text-[#0F0F14] dark:hover:text-[#f1f0ff] hover:bg-[#F5F4FF] dark:hover:bg-[#1e1e35] rounded-xl font-medium"
+                    className="block px-4 py-2.5 text-sm text-[#1a1a1a] hover:text-[#0F0F14] hover:bg-gray-100 rounded-xl font-medium"
                   >
                     Ingresar
                   </Link>
                   <Link
                     href="/auth/register"
                     onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-[#0F0F14] dark:text-[#f1f0ff] font-semibold hover:bg-[#F5F4FF] dark:hover:bg-[#1e1e35] rounded-xl"
+                    className="block px-4 py-2.5 text-sm text-[#0F0F14] font-semibold hover:bg-gray-100 rounded-xl"
                   >
                     Registrarse
                   </Link>

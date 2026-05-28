@@ -1,38 +1,4 @@
-/**
- * FranchiseBanner — hero temático por franquicia.
- *
- * El lado derecho (desktop) muestra CharacterTrio con los 3 personajes
- * representativos de cada universo.
- *
- * Imágenes:
- *   Formato : PNG con fondo transparente, 400×600 px mínimo
- *   Ruta    : /public/characters/{universo}/{personaje}.png
- *   Fallback: emoji definido en `images.*` de cada tema (se activa si la imagen no carga)
- *
- * Fuentes recomendadas para las imágenes:
- *   • Marvel     → press.marvel.com  (press kit oficial)
- *   • DC         → dccomics.com/media (assets de prensa)
- *   • Disney     → disneyplus.com press kit / studio.helloworld.com
- *   • Anime      → assets de Bandai Namco / Toei Animation press kit
- *   • Star Wars  → starwars.com/databank (imágenes de personajes)
- *   • HP         → wizardingworld.com/explore-the-story (renders oficiales)
- *   • Juegos     → press.nintendo.com / news.xbox.com (press kits oficiales)
- *
- * ⚠️  NO usar imágenes de terceros sin licencia. Los press kits oficiales
- *     incluyen assets de alta resolución con fondo transparente listos para usar.
- */
-
 import Link from 'next/link'
-import CharacterTrio, { type CharacterSlot } from './CharacterTrio'
-
-/* ─────────────────────────────────────────────────────────────────
-   Tipos
-───────────────────────────────────────────────────────────────── */
-interface CharacterImages {
-  left:   CharacterSlot
-  center: CharacterSlot
-  right:  CharacterSlot
-}
 
 interface Theme {
   label:      string
@@ -46,17 +12,10 @@ interface Theme {
   chipBg:     string
   chipColor:  string
   chipBorder: string
-  /** Color base más oscuro del bg — usado para el fade inferior del CharacterTrio */
-  bgBase:     string
-  /** Imágenes de los 3 personajes. Fallback a emoji si el archivo no existe. */
-  images:     CharacterImages
 }
 
 type FKey = 'Marvel' | 'DC' | 'Disney' | 'Anime' | 'Star Wars' | 'Harry Potter' | 'Juegos'
 
-/* ─────────────────────────────────────────────────────────────────
-   Temas por franquicia
-───────────────────────────────────────────────────────────────── */
 const THEMES: Record<FKey, Theme> = {
 
   Marvel: {
@@ -69,15 +28,6 @@ const THEMES: Record<FKey, Theme> = {
       backgroundSize: '28px 28px',
     },
     chipBg: 'rgba(232,41,60,.18)', chipColor: '#FF8090', chipBorder: 'rgba(232,41,60,.40)',
-    bgBase: '#060000',
-    images: {
-      // /public/characters/marvel/iron-man.png — Iron Man render PNG transparente
-      left:   { src: '/characters/marvel/iron-man.png',   alt: 'Iron Man',   emoji: '⚙️' },
-      // /public/characters/marvel/spider-man.png
-      center: { src: '/characters/marvel/spider-man.png', alt: 'Spider-Man', emoji: '🕷️' },
-      // /public/characters/marvel/wolverine.png
-      right:  { src: '/characters/marvel/wolverine.png',  alt: 'Wolverine',  emoji: '🦁' },
-    },
   },
 
   DC: {
@@ -92,12 +42,6 @@ const THEMES: Record<FKey, Theme> = {
       backgroundSize: '44px 44px',
     },
     chipBg: 'rgba(30,144,255,.14)', chipColor: '#72B8FF', chipBorder: 'rgba(30,144,255,.35)',
-    bgBase: '#000207',
-    images: {
-      left:   { src: '/characters/dc/batman.png',   alt: 'Batman',    emoji: '🦇' },
-      center: { src: '/characters/dc/superman.png', alt: 'Superman',  emoji: '🔵' },
-      right:  { src: '/characters/dc/flash.png',    alt: 'The Flash', emoji: '⚡' },
-    },
   },
 
   Disney: {
@@ -113,12 +57,6 @@ const THEMES: Record<FKey, Theme> = {
       backgroundPosition: '0 0,27px 27px',
     },
     chipBg: 'rgba(255,215,0,.14)', chipColor: '#FFE57A', chipBorder: 'rgba(255,215,0,.35)',
-    bgBase: '#010218',
-    images: {
-      left:   { src: '/characters/disney/mickey.png',         alt: 'Mickey Mouse',   emoji: '🐭' },
-      center: { src: '/characters/disney/stitch.png',         alt: 'Stitch',         emoji: '💙' },
-      right:  { src: '/characters/disney/buzz-lightyear.png', alt: 'Buzz Lightyear', emoji: '🚀' },
-    },
   },
 
   Anime: {
@@ -131,12 +69,6 @@ const THEMES: Record<FKey, Theme> = {
         'repeating-linear-gradient(-45deg,rgba(255,107,107,.07),rgba(255,107,107,.07) 1px,transparent 1px,transparent 18px)',
     },
     chipBg: 'rgba(255,107,107,.18)', chipColor: '#FF9999', chipBorder: 'rgba(255,107,107,.40)',
-    bgBase: '#080012',
-    images: {
-      left:   { src: '/characters/anime/naruto.png', alt: 'Naruto', emoji: '🍥' },
-      center: { src: '/characters/anime/goku.png',   alt: 'Goku',   emoji: '🔥' },
-      right:  { src: '/characters/anime/luffy.png',  alt: 'Luffy',  emoji: '⚓' },
-    },
   },
 
   'Star Wars': {
@@ -152,12 +84,6 @@ const THEMES: Record<FKey, Theme> = {
       backgroundPosition: '15px 20px,55px 75px',
     },
     chipBg: 'rgba(65,105,225,.15)', chipColor: '#88AAFF', chipBorder: 'rgba(65,105,225,.35)',
-    bgBase: '#000103',
-    images: {
-      left:   { src: '/characters/star-wars/luke.png',        alt: 'Luke Skywalker', emoji: '⚔️' },
-      center: { src: '/characters/star-wars/darth-vader.png', alt: 'Darth Vader',    emoji: '🔴' },
-      right:  { src: '/characters/star-wars/mandalorian.png', alt: 'Mandalorian',    emoji: '🪖' },
-    },
   },
 
   'Harry Potter': {
@@ -170,12 +96,6 @@ const THEMES: Record<FKey, Theme> = {
       backgroundSize: '38px 38px',
     },
     chipBg: 'rgba(197,160,40,.14)', chipColor: '#DDBB55', chipBorder: 'rgba(197,160,40,.35)',
-    bgBase: '#030210',
-    images: {
-      left:   { src: '/characters/hp/voldemort.png',     alt: 'Voldemort',    emoji: '💀' },
-      center: { src: '/characters/hp/harry-potter.png',  alt: 'Harry Potter', emoji: '⚡' },
-      right:  { src: '/characters/hp/hermione.png',      alt: 'Hermione',     emoji: '📚' },
-    },
   },
 
   Juegos: {
@@ -190,18 +110,9 @@ const THEMES: Record<FKey, Theme> = {
       backgroundSize: '22px 22px',
     },
     chipBg: 'rgba(0,230,118,.12)', chipColor: '#66FFB3', chipBorder: 'rgba(0,230,118,.28)',
-    bgBase: '#010101',
-    images: {
-      left:   { src: '/characters/games/kratos.png',       alt: 'Kratos',       emoji: '🪓' },
-      center: { src: '/characters/games/master-chief.png', alt: 'Master Chief', emoji: '🪖' },
-      right:  { src: '/characters/games/mario.png',        alt: 'Mario',        emoji: '⭐' },
-    },
   },
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   Pills de navegación
-───────────────────────────────────────────────────────────────── */
 const PILLS = [
   { label: 'Todos',        href: '/',                        icon: '✨' },
   { label: 'Marvel',       href: '/?franchise=Marvel',       icon: '🦸' },
@@ -215,9 +126,6 @@ const PILLS = [
 
 const BANNER_H = 470
 
-/* ─────────────────────────────────────────────────────────────────
-   Banner principal
-───────────────────────────────────────────────────────────────── */
 interface Props {
   franchise:       string
   activeFranchise: string
@@ -250,19 +158,22 @@ export default function FranchiseBanner({ franchise, activeFranchise, count }: P
           'rgba(0,0,0,.88) 0%,rgba(0,0,0,.55) 32%,rgba(0,0,0,.15) 52%,transparent 65%)',
       }} />
 
-      {/* Resplandor de acento derecho */}
+      {/* Resplandor de acento */}
       <div className="absolute right-0 top-0 bottom-0 w-2/3 pointer-events-none" style={{
-        background: `radial-gradient(ellipse at 78% 55%, rgba(${theme.rgb},.25) 0%, transparent 55%)`,
+        background: `radial-gradient(ellipse at 78% 55%, rgba(${theme.rgb},.35) 0%, transparent 55%)`,
       }} />
 
-      {/* Layout principal */}
+      {/* Segundo resplandor central para mayor profundidad */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: `radial-gradient(ellipse at 60% 50%, rgba(${theme.rgb},.15) 0%, transparent 60%)`,
+      }} />
+
+      {/* Layout */}
       <div
         className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-stretch"
         style={{ minHeight: `${BANNER_H}px` }}
       >
-
-        {/* TEXTO ─────────────────────────────────────────────────────────── */}
-        <div className="flex-1 flex flex-col justify-center py-14 z-10 pr-4 lg:pr-14">
+        <div className="flex-1 flex flex-col justify-center py-14 z-10 max-w-2xl">
 
           <span
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-bold rounded-full mb-5 tracking-widest uppercase w-fit"
@@ -290,7 +201,7 @@ export default function FranchiseBanner({ franchise, activeFranchise, count }: P
           </p>
 
           <p
-            className="max-w-xs mb-6 leading-relaxed"
+            className="max-w-sm mb-6 leading-relaxed"
             style={{ fontSize: 'clamp(.85rem,1.5vw,1rem)', color: 'rgba(255,255,255,.50)' }}
           >
             {theme.tagline}
@@ -340,23 +251,6 @@ export default function FranchiseBanner({ franchise, activeFranchise, count }: P
             })}
           </div>
         </div>
-
-        {/* PERSONAJES (solo desktop) ────────────────────────────────────── */}
-        <div
-          className="hidden lg:flex items-end justify-center flex-shrink-0"
-          style={{ width: '460px', minHeight: `${BANNER_H}px` }}
-        >
-          <CharacterTrio
-            left  ={theme.images.left}
-            center={theme.images.center}
-            right ={theme.images.right}
-            glow  ={`rgba(${theme.rgb},0.55)`}
-            fadeTo={theme.bgBase}
-            height={BANNER_H}
-            width ={460}
-          />
-        </div>
-
       </div>
     </section>
   )
