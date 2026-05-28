@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { formatDateTime, formatPrice } from '@/lib/utils'
+import { formatDate, formatDateTime, formatPrice } from '@/lib/utils'
 import Link from 'next/link'
 import { User, Package, ShoppingBag, Calendar } from 'lucide-react'
 
