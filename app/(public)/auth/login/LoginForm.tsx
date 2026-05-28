@@ -22,10 +22,11 @@ export default function LoginForm() {
   const callbackError = searchParams.get('error')
 
   // ── Login form state ──────────────────────────────────────────────────────
-  const [email, setEmail]       = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading]   = useState(false)
-  const [error, setError]       = useState(callbackError ?? '')
+  const [email, setEmail]             = useState('')
+  const [password, setPassword]       = useState('')
+  const [loading, setLoading]         = useState(false)
+  const [error, setError]             = useState(callbackError ?? '')
+  const [noAccountFound, setNoAccountFound] = useState(false)
   const inFlight = useRef(false)
 
   const isUnconfirmed = error.toLowerCase().includes('confirmar')
@@ -55,6 +56,7 @@ export default function LoginForm() {
     inFlight.current = true
     setLoading(true)
     setError('')
+    setNoAccountFound(false)
 
     try {
       const { error: authError } = await supabase.auth.signInWithPassword({
@@ -63,6 +65,35 @@ export default function LoginForm() {
       })
 
       if (authError) {
+        const rawMsg = authError.message.toLowerCase()
+        const isInvalidCreds = (
+          rawMsg.includes('invalid login credentials') ||
+          rawMsg.includes('invalid_credentials') ||
+          rawMsg.includes('invalid email or password')
+        )
+
+        if (isInvalidCreds) {
+          try {
+            const res = await fetch('/api/auth/email-exists', {
+              method:  'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body:    JSON.stringify({ email: email.trim().toLowerCase() }),
+            })
+            if (res.ok) {
+              const { exists } = await res.json()
+              if (!exists) {
+                setNoAccountFound(true)
+                setError('No existe ninguna cuenta registrada con este email.')
+                setLoading(false)
+                return
+              }
+            }
+          } catch {
+            // Network error → fall through to generic error
+          }
+        }
+
+        setNoAccountFound(false)
         setError(translateAuthError(authError.message))
         setLoading(false)
       } else {
@@ -286,10 +317,26 @@ export default function LoginForm() {
         </div>
 
         {/* Error genérico */}
-        {error && !isUnconfirmed && (
+        {error && !isUnconfirmed && !noAccountFound && (
           <div className="flex items-start gap-2.5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
             <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
             <span>{error}</span>
+          </div>
+        )}
+
+        {/* Email no registrado — ofrece ir a registro */}
+        {noAccountFound && (
+          <div className="flex items-start gap-2.5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+            <span>
+              {error}{' '}
+              <Link
+                href="/auth/register"
+                className="font-semibold underline underline-offset-2 hover:text-red-700"
+              >
+                ¿Querés registrarte gratis?
+              </Link>
+            </span>
           </div>
         )}
 

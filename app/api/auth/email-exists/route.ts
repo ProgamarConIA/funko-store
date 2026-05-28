@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,37 +10,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ exists: false }, { status: 400 })
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const admin = getSupabaseAdmin()
+    // listUsers doesn't support an email filter in the JS SDK, so we fetch the
+    // first page (up to 1000) and do an exact-match on our side.
+    const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
 
-    if (!supabaseUrl || !serviceKey) {
-      return NextResponse.json({ exists: true }) // fail open
+    if (error || !data?.users) {
+      return NextResponse.json({ exists: true }) // fail open on API error
     }
 
-    // GoTrue admin REST API — `filter` searches across email and other user fields.
-    // We fetch up to 10 results and then verify exact email match on our side
-    // to avoid false positives from substring matches.
-    const res = await fetch(
-      `${supabaseUrl}/auth/v1/admin/users?filter=${encodeURIComponent(email)}&per_page=10`,
-      {
-        headers: {
-          apikey:        serviceKey,
-          Authorization: `Bearer ${serviceKey}`,
-        },
-      }
-    )
-
-    if (!res.ok) {
-      return NextResponse.json({ exists: true }) // fail open
-    }
-
-    const result = await res.json()
-    const users: { email?: string }[] = result.users ?? []
-    const exists = users.some(u => u.email?.toLowerCase() === email)
-
+    const exists = data.users.some(u => u.email?.toLowerCase() === email)
     return NextResponse.json({ exists })
   } catch {
-    // Network error or missing env vars → fail open (don't block legitimate users)
+    // Missing env vars or network error → fail open
     return NextResponse.json({ exists: true })
   }
 }
