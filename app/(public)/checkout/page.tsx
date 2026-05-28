@@ -27,9 +27,11 @@ export default function CheckoutPage() {
   const currencyCode = useCurrencyStore((s) => s.code)
   const currencyRate = useCurrencyStore((s) => s.rate)
 
-  const [step, setStep] = useState<'shipping' | 'payment'>('shipping')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [step,      setStep]      = useState<'shipping' | 'payment'>('shipping')
+  const [loading,   setLoading]   = useState(false)
+  const [error,     setError]     = useState('')
+  // Prevents the empty-cart guard from firing after a successful submission
+  const [submitted, setSubmitted] = useState(false)
 
   const [address, setAddress] = useState<ShippingAddress>({
     full_name: '', address: '', city: '', state: '', zip_code: '', country: 'Argentina', phone: '',
@@ -37,7 +39,7 @@ export default function CheckoutPage() {
 
   const [payment, setPayment] = useState({ card_number: '', card_name: '', expiry: '', cvv: '' })
 
-  if (items.length === 0) {
+  if (items.length === 0 && !submitted) {
     router.replace('/')
     return null
   }
@@ -72,8 +74,12 @@ export default function CheckoutPage() {
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? 'Error al procesar el pedido')
 
+      // Set flag BEFORE clearCart so the empty-cart guard doesn't fire
+      setSubmitted(true)
       clearCart()
-      router.push(`/checkout/success?order=${json.data.id}`)
+      router.push(
+        `/checkout/success?order=${json.data.id}&total=${displayTotal}&currency=${currencyCode}`
+      )
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error desconocido')
     } finally {
