@@ -112,11 +112,13 @@ html, body {
   }
 }
 
-/* Sombra sobre la imagen del producto en dark mode
-   para "separar" visualmente el funko del fondo */
+/* Sombra bajo el producto para darle relieve */
+.product-img-shadow {
+  filter: drop-shadow(0 6px 14px rgba(88,86,214,.15));
+}
 @media (prefers-color-scheme: dark) {
   .product-img-shadow {
-    filter: drop-shadow(0 4px 18px rgba(0,0,0,.70));
+    filter: drop-shadow(0 6px 20px rgba(0,0,0,.75));
   }
 }
 
@@ -131,13 +133,15 @@ html, body {
 }
 
 /* ── Sombras ────────────────────────────────────────────────────*/
-.shadow-card    { box-shadow: 0 1px 3px rgba(88,86,214,.10), 0 4px 16px rgba(88,86,214,.06); }
-.shadow-card-lg { box-shadow: 0 4px 24px rgba(88,86,214,.18), 0 1px 4px rgba(88,86,214,.10); }
-.shadow-drawer  { box-shadow: -8px 0 40px rgba(10,10,20,.12); }
+.shadow-card       { box-shadow: 0 1px 3px rgba(88,86,214,.10), 0 4px 16px rgba(88,86,214,.06); }
+.shadow-card-lg    { box-shadow: 0 4px 24px rgba(88,86,214,.18), 0 1px 4px rgba(88,86,214,.10); }
+.shadow-card-hover { box-shadow: 0 8px 32px rgba(88,86,214,.22), 0 2px 8px rgba(88,86,214,.14), 0 0 0 1px rgba(88,86,214,.10); }
+.shadow-drawer     { box-shadow: -8px 0 40px rgba(10,10,20,.12); }
 
 @media (prefers-color-scheme: dark) {
-  .shadow-card    { box-shadow: 0 1px 3px rgba(0,0,0,.3),  0 4px 16px rgba(0,0,0,.25); }
-  .shadow-card-lg { box-shadow: 0 4px 24px rgba(0,0,0,.4), 0 1px 4px rgba(0,0,0,.2); }
+  .shadow-card       { box-shadow: 0 1px 3px rgba(0,0,0,.3),  0 4px 16px rgba(0,0,0,.25); }
+  .shadow-card-lg    { box-shadow: 0 4px 24px rgba(0,0,0,.4), 0 1px 4px rgba(0,0,0,.2); }
+  .shadow-card-hover { box-shadow: 0 8px 32px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.30), 0 0 0 1px rgba(88,86,214,.30); }
 }
 
 /* ── Animaciones ────────────────────────────────────────────────*/
