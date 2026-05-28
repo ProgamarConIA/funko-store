@@ -47,9 +47,11 @@ export default function ForgotPasswordPage() {
     setLoading(true)
 
     try {
-      // Verify the email has a registered account before sending.
-      // resetPasswordForEmail() doesn't reveal non-existent emails (privacy),
-      // so we check via a server-side admin lookup first.
+      // Hard gate: only call resetPasswordForEmail when email-exists explicitly
+      // confirms the account. On any failure (network, API error, env vars missing)
+      // we block rather than silently proceeding — Supabase never errors for
+      // non-existent emails, so a silent proceed would always show the success screen.
+      let emailConfirmed = false
       try {
         const res = await fetch('/api/auth/email-exists', {
           method:  'POST',
@@ -58,14 +60,15 @@ export default function ForgotPasswordPage() {
         })
         if (res.ok) {
           const { exists } = await res.json()
-          if (!exists) {
-            setError('No hay ninguna cuenta registrada con este email.')
-            return
-          }
+          emailConfirmed = exists === true
         }
-        // If fetch fails, continue anyway — don't block legitimate users
       } catch {
-        // Network error → continue with recovery attempt
+        // Network error → emailConfirmed stays false
+      }
+
+      if (!emailConfirmed) {
+        setError('No existe ninguna cuenta asociada a este email.')
+        return
       }
 
       const { error: authError } = await supabase.auth.resetPasswordForEmail(
