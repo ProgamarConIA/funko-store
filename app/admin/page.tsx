@@ -3,6 +3,7 @@ import { formatPrice } from '@/lib/utils'
 import { Package, Users, ShoppingBag, TrendingUp, AlertTriangle } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import RecentOrdersWidget from './RecentOrdersWidget'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Admin — Dashboard' }
@@ -19,7 +20,7 @@ export default async function AdminDashboard() {
     supabaseAdmin.from('products').select('*', { count: 'exact', head: true }),
     supabaseAdmin.from('orders').select('*', { count: 'exact', head: true }),
     supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true }),
-    supabaseAdmin.from('orders').select('id, status, total, created_at, profiles(full_name, email)').order('created_at', { ascending: false }).limit(6),
+    supabaseAdmin.from('orders').select('id, status, total, currency, display_total, created_at, profiles(full_name, email)').order('created_at', { ascending: false }).limit(6),
     supabaseAdmin.from('orders').select('total').eq('status', 'paid'),
     supabaseAdmin.from('products').select('id, name, stock, franchise').lte('stock', 5).order('stock'),
   ])
@@ -85,44 +86,16 @@ export default async function AdminDashboard() {
           </div>
         )}
 
-        {/* Pedidos recientes */}
-        <div className="bg-white border border-[#E4E4EC] rounded-2xl overflow-hidden shadow-card">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#E4E4EC]">
-            <h2 className="font-semibold text-[#0F0F14] text-sm flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-[#5856D6]" /> Pedidos recientes
-            </h2>
-            <Link href="/admin/orders" className="text-xs text-[#5856D6] hover:text-[#4644b8] font-medium">
-              Ver todos →
-            </Link>
-          </div>
-          <div className="divide-y divide-[#E4E4EC]">
-            {recentOrders && recentOrders.length > 0 ? recentOrders.map((order) => {
-              const profile = (order.profiles as unknown) as { full_name: string | null; email: string } | null
-              const statusColor =
-                order.status === 'paid'      ? 'bg-blue-50 text-blue-600 border-blue-200' :
-                order.status === 'delivered' ? 'bg-green-50 text-green-600 border-green-200' :
-                order.status === 'shipped'   ? 'bg-indigo-50 text-indigo-600 border-indigo-200' :
-                order.status === 'cancelled' ? 'bg-red-50 text-red-500 border-red-200' :
-                                               'bg-amber-50 text-amber-600 border-amber-200'
-              return (
-                <div key={order.id} className="flex items-center justify-between px-5 py-3">
-                  <div>
-                    <p className="text-xs font-mono font-semibold text-[#0F0F14]">#{order.id.slice(0,8).toUpperCase()}</p>
-                    <p className="text-xs text-[#6B6B7B]">{profile?.full_name ?? profile?.email ?? 'Usuario'}</p>
-                  </div>
-                  <div className="text-right flex flex-col items-end gap-1">
-                    <p className="text-sm font-bold text-[#0F0F14]">{formatPrice(order.total)}</p>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold ${statusColor}`}>
-                      {order.status}
-                    </span>
-                  </div>
-                </div>
-              )
-            }) : (
-              <div className="px-5 py-8 text-center text-[#B0B0BE] text-sm">Sin pedidos aún</div>
-            )}
-          </div>
-        </div>
+        {/* Pedidos recientes — realtime */}
+        <RecentOrdersWidget initialOrders={(recentOrders ?? []).map((o) => ({
+          id:            o.id,
+          status:        o.status,
+          total:         o.total,
+          currency:      (o as { currency?: string | null }).currency ?? null,
+          display_total: (o as { display_total?: number | null }).display_total ?? null,
+          created_at:    o.created_at,
+          profiles:      (o.profiles as unknown) as { full_name: string | null; email: string } | null,
+        }))} />
       </div>
     </div>
   )

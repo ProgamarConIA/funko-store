@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Shield, User, ChevronRight } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Shield, User, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import UserDetailModal, { type UserProfile } from './UserDetailModal'
 
 interface Props {
@@ -13,6 +13,15 @@ interface Props {
 export default function UsersTableClient({ initialProfiles, callerId, adminEmail }: Props) {
   const [profiles,     setProfiles]     = useState<UserProfile[]>(initialProfiles)
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null)
+  const [sortOrder,    setSortOrder]    = useState<'asc' | 'desc'>('asc')
+
+  const sortedProfiles = useMemo(() =>
+    [...profiles].sort((a, b) => {
+      const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      return sortOrder === 'asc' ? diff : -diff
+    }),
+    [profiles, sortOrder]
+  )
 
   // ── Callbacks del modal ────────────────────────────────────────────────────
   const handleDeleted = (deletedId: string) => {
@@ -45,18 +54,30 @@ export default function UsersTableClient({ initialProfiles, callerId, adminEmail
         <table className="w-full text-sm min-w-[600px]">
           <thead>
             <tr className="bg-[#FAFAFA] border-b border-[#E4E4EC]">
-              {['#', 'Email', 'Nombre', 'Rol', 'Registrado', 'Pedidos', ''].map((h) => (
+              {['#', 'Email', 'Nombre', 'Rol', '', 'Pedidos', ''].map((h, i) => (
                 <th
-                  key={h}
+                  key={i}
                   className="text-left px-4 py-3 text-[10px] font-semibold text-[#B0B0BE] uppercase tracking-widest"
                 >
-                  {h}
+                  {/* Sort button replaces the "Registrado" column header */}
+                  {i === 4 ? (
+                    <button
+                      onClick={() => setSortOrder((s) => s === 'asc' ? 'desc' : 'asc')}
+                      className="flex items-center gap-1 text-[10px] font-semibold text-[#B0B0BE] uppercase tracking-widest hover:text-[#5856D6] transition-colors group"
+                    >
+                      Registrado
+                      {sortOrder === 'asc'
+                        ? <ArrowUp   className="w-3 h-3 text-[#5856D6]" />
+                        : <ArrowDown className="w-3 h-3 text-[#5856D6]" />
+                      }
+                    </button>
+                  ) : h}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {profiles.map((profile, idx) => {
+            {sortedProfiles.map((profile, idx) => {
               const isProtected = profile.email === adminEmail || profile.id === callerId
               const isAdmin     = profile.role === 'admin'
 
