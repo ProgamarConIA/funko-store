@@ -20,19 +20,46 @@ export default async function AdminDashboard() {
     supabaseAdmin.from('products').select('*', { count: 'exact', head: true }),
     supabaseAdmin.from('orders').select('*', { count: 'exact', head: true }),
     supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true }),
-    supabaseAdmin.from('orders').select('id, status, total, currency, display_total, created_at, profiles(full_name, email)').order('created_at', { ascending: false }).limit(6),
-    supabaseAdmin.from('orders').select('total').eq('status', 'paid'),
+    supabaseAdmin
+      .from('orders')
+      .select(`
+        id, status, total, currency, display_total, created_at,
+        profiles(full_name, email),
+        order_items(quantity, unit_price, product:products(id, name, image_url))
+      `)
+      .order('created_at', { ascending: false })
+      .limit(10),
+    supabaseAdmin.from('orders').select('total').in('status', ['paid', 'delivered']),
     supabaseAdmin.from('products').select('id, name, stock, franchise').lte('stock', 5).order('stock'),
   ])
 
   const totalRevenue = revenue?.reduce((acc, o) => acc + o.total, 0) ?? 0
 
   const stats = [
-    { label: 'Productos',  value: totalProducts ?? 0,          icon: <Package className="w-5 h-5" />,     color: 'text-[#5856D6]', bg: 'bg-[#EEEDFF]' },
-    { label: 'Pedidos',    value: totalOrders ?? 0,             icon: <ShoppingBag className="w-5 h-5" />, color: 'text-blue-600',   bg: 'bg-blue-50' },
-    { label: 'Usuarios',   value: totalUsers ?? 0,              icon: <Users className="w-5 h-5" />,       color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Ingresos',   value: formatPrice(totalRevenue),    icon: <TrendingUp className="w-5 h-5" />,  color: 'text-amber-600',  bg: 'bg-amber-50' },
+    { label: 'Productos',  value: totalProducts ?? 0,          icon: <Package    className="w-5 h-5" />, color: 'text-[#5856D6]',  bg: 'bg-[#EEEDFF]' },
+    { label: 'Pedidos',    value: totalOrders ?? 0,             icon: <ShoppingBag className="w-5 h-5"/>, color: 'text-blue-600',    bg: 'bg-blue-50' },
+    { label: 'Usuarios',   value: totalUsers ?? 0,              icon: <Users      className="w-5 h-5" />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Ingresos',   value: formatPrice(totalRevenue),    icon: <TrendingUp className="w-5 h-5" />, color: 'text-amber-600',   bg: 'bg-amber-50' },
   ]
+
+  // Normalise Supabase row into the widget's typed interface
+  type RawOrder = NonNullable<typeof recentOrders>[number]
+  type RawItem  = { quantity: number; unit_price: number; product: { id: string; name: string; image_url: string | null } | null }
+
+  const normalizedOrders = (recentOrders ?? []).map((o: RawOrder) => ({
+    id:            o.id,
+    status:        o.status,
+    total:         o.total,
+    currency:      (o as unknown as { currency: string | null }).currency ?? null,
+    display_total: (o as unknown as { display_total: number | null }).display_total ?? null,
+    created_at:    o.created_at,
+    profiles:      (o.profiles as unknown) as { full_name: string | null; email: string } | null,
+    order_items:   ((o as unknown as { order_items: RawItem[] }).order_items ?? []).map((i) => ({
+      quantity:   i.quantity,
+      unit_price: i.unit_price,
+      product:    i.product ?? null,
+    })),
+  }))
 
   return (
     <div className="space-y-8">
@@ -56,47 +83,39 @@ export default async function AdminDashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Pedidos recientes — ancho completo */}
+      <RecentOrdersWidget initialOrders={normalizedOrders} />
 
-        {/* Stock bajo */}
-        {lowStock && lowStock.length > 0 && (
-          <div className="bg-white border border-amber-200 rounded-2xl overflow-hidden shadow-card">
-            <div className="flex items-center gap-2 px-5 py-4 border-b border-amber-100 bg-amber-50">
-              <AlertTriangle className="w-4 h-4 text-amber-500" />
-              <h2 className="font-semibold text-amber-700 text-sm">Stock bajo ({lowStock.length})</h2>
-            </div>
-            <div className="divide-y divide-[#E4E4EC]">
-              {lowStock.map((p) => (
-                <div key={p.id} className="flex items-center justify-between px-5 py-3">
-                  <div>
-                    <p className="text-sm font-medium text-[#0F0F14]">{p.name}</p>
-                    <p className="text-xs text-[#6B6B7B]">{p.franchise}</p>
-                  </div>
-                  <span className={`text-sm font-bold ${p.stock === 0 ? 'text-red-500' : 'text-amber-500'}`}>
-                    {p.stock === 0 ? 'Sin stock' : `${p.stock} uds.`}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="px-5 py-3 border-t border-[#E4E4EC]">
-              <Link href="/admin/products" className="text-xs text-[#5856D6] hover:text-[#4644b8] font-medium">
-                Gestionar productos →
-              </Link>
-            </div>
+      {/* Stock bajo — solo si hay productos con stock crítico */}
+      {lowStock && lowStock.length > 0 && (
+        <div className="bg-white border border-amber-200 rounded-2xl overflow-hidden shadow-card">
+          <div className="flex items-center gap-2 px-5 py-4 border-b border-amber-100 bg-amber-50">
+            <AlertTriangle className="w-4 h-4 text-amber-500" />
+            <h2 className="font-semibold text-amber-700 text-sm">
+              Stock bajo — {lowStock.length} producto{lowStock.length !== 1 ? 's' : ''} en alerta
+            </h2>
           </div>
-        )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[#E4E4EC]">
+            {lowStock.map((p) => (
+              <div key={p.id} className="flex items-center justify-between px-5 py-3">
+                <div>
+                  <p className="text-sm font-medium text-[#0F0F14]">{p.name}</p>
+                  <p className="text-xs text-[#6B6B7B]">{p.franchise}</p>
+                </div>
+                <span className={`text-sm font-bold ${p.stock === 0 ? 'text-red-500' : 'text-amber-500'}`}>
+                  {p.stock === 0 ? 'Sin stock' : `${p.stock} uds.`}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="px-5 py-3 border-t border-[#E4E4EC]">
+            <Link href="/admin/products" className="text-xs text-[#5856D6] hover:text-[#4644b8] font-medium">
+              Gestionar productos →
+            </Link>
+          </div>
+        </div>
+      )}
 
-        {/* Pedidos recientes — realtime */}
-        <RecentOrdersWidget initialOrders={(recentOrders ?? []).map((o) => ({
-          id:            o.id,
-          status:        o.status,
-          total:         o.total,
-          currency:      (o as { currency?: string | null }).currency ?? null,
-          display_total: (o as { display_total?: number | null }).display_total ?? null,
-          created_at:    o.created_at,
-          profiles:      (o.profiles as unknown) as { full_name: string | null; email: string } | null,
-        }))} />
-      </div>
     </div>
   )
 }
