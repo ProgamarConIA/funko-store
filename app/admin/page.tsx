@@ -9,57 +9,85 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Admin — Dashboard' }
 
 export default async function AdminDashboard() {
+
+  // ── Fase 1: queries independientes en paralelo ────────────────────────────
   const [
     { count: totalProducts },
     { count: totalOrders },
     { count: totalUsers },
-    { data: recentOrders },
+    { data: rawOrders, error: ordersErr },
     { data: revenue },
     { data: lowStock },
   ] = await Promise.all([
     supabaseAdmin.from('products').select('*', { count: 'exact', head: true }),
     supabaseAdmin.from('orders').select('*', { count: 'exact', head: true }),
     supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true }),
+    // Sin join a profiles — evita fallo silencioso por FK a auth.users
     supabaseAdmin
       .from('orders')
-      .select(`
-        id, status, total, currency, display_total, created_at,
-        profiles(full_name, email),
-        order_items(quantity, unit_price, product:products(id, name, image_url))
-      `)
+      .select('id, status, total, currency, display_total, created_at, user_id')
       .order('created_at', { ascending: false })
       .limit(10),
     supabaseAdmin.from('orders').select('total').in('status', ['paid', 'delivered']),
     supabaseAdmin.from('products').select('id, name, stock, franchise').lte('stock', 5).order('stock'),
   ])
 
-  const totalRevenue = revenue?.reduce((acc, o) => acc + o.total, 0) ?? 0
+  if (ordersErr) console.error('[admin/dashboard] orders query error:', ordersErr)
 
-  const stats = [
-    { label: 'Productos',  value: totalProducts ?? 0,          icon: <Package    className="w-5 h-5" />, color: 'text-[#5856D6]',  bg: 'bg-[#EEEDFF]' },
-    { label: 'Pedidos',    value: totalOrders ?? 0,             icon: <ShoppingBag className="w-5 h-5"/>, color: 'text-blue-600',    bg: 'bg-blue-50' },
-    { label: 'Usuarios',   value: totalUsers ?? 0,              icon: <Users      className="w-5 h-5" />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Ingresos',   value: formatPrice(totalRevenue),    icon: <TrendingUp className="w-5 h-5" />, color: 'text-amber-600',   bg: 'bg-amber-50' },
-  ]
+  // ── Fase 2: enriquecimiento dependiente de los IDs obtenidos ──────────────
+  const orderIds  = (rawOrders ?? []).map((o) => o.id)
+  const userIds   = [...new Set((rawOrders ?? []).map((o) => o.user_id).filter(Boolean))]
 
-  // Normalise Supabase row into the widget's typed interface
-  type RawOrder = NonNullable<typeof recentOrders>[number]
-  type RawItem  = { quantity: number; unit_price: number; product: { id: string; name: string; image_url: string | null } | null }
+  const [profilesRes, itemsRes] = await Promise.all([
+    userIds.length > 0
+      ? supabaseAdmin.from('profiles').select('id, full_name, email').in('id', userIds)
+      : Promise.resolve({ data: [] as { id: string; full_name: string | null; email: string }[], error: null }),
+    orderIds.length > 0
+      ? supabaseAdmin
+          .from('order_items')
+          .select('order_id, quantity, unit_price, product:products(id, name, image_url)')
+          .in('order_id', orderIds)
+      : Promise.resolve({ data: [] as unknown[], error: null }),
+  ])
 
-  const normalizedOrders = (recentOrders ?? []).map((o: RawOrder) => ({
+  const profiles = profilesRes.data
+  const rawItems = itemsRes.data
+
+  // ── Merge ─────────────────────────────────────────────────────────────────
+  const profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.id, p]))
+
+  type RawItem = { order_id: string; quantity: number; unit_price: number; product: { id: string; name: string; image_url: string | null } | null }
+  const itemsMap: Record<string, RawItem[]> = {}
+  ;(rawItems ?? []).forEach((item) => {
+    const i = item as unknown as RawItem
+    if (!itemsMap[i.order_id]) itemsMap[i.order_id] = []
+    itemsMap[i.order_id].push(i)
+  })
+
+  const normalizedOrders = (rawOrders ?? []).map((o) => ({
     id:            o.id,
     status:        o.status,
     total:         o.total,
-    currency:      (o as unknown as { currency: string | null }).currency ?? null,
+    currency:      (o as unknown as { currency: string | null }).currency    ?? null,
     display_total: (o as unknown as { display_total: number | null }).display_total ?? null,
     created_at:    o.created_at,
-    profiles:      (o.profiles as unknown) as { full_name: string | null; email: string } | null,
-    order_items:   ((o as unknown as { order_items: RawItem[] }).order_items ?? []).map((i) => ({
+    profiles:      profileMap[o.user_id] ?? null,
+    order_items:   (itemsMap[o.id] ?? []).map((i) => ({
       quantity:   i.quantity,
       unit_price: i.unit_price,
-      product:    i.product ?? null,
+      product:    i.product,
     })),
   }))
+
+  // ── Stats ─────────────────────────────────────────────────────────────────
+  const totalRevenue = (revenue ?? []).reduce((acc, o) => acc + (o.total ?? 0), 0)
+
+  const stats = [
+    { label: 'Productos',  value: totalProducts ?? 0,       icon: <Package    className="w-5 h-5" />, color: 'text-[#5856D6]',  bg: 'bg-[#EEEDFF]' },
+    { label: 'Pedidos',    value: totalOrders ?? 0,          icon: <ShoppingBag className="w-5 h-5"/>, color: 'text-blue-600',    bg: 'bg-blue-50' },
+    { label: 'Usuarios',   value: totalUsers ?? 0,           icon: <Users      className="w-5 h-5" />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Ingresos',   value: formatPrice(totalRevenue), icon: <TrendingUp className="w-5 h-5" />, color: 'text-amber-600',   bg: 'bg-amber-50' },
+  ]
 
   return (
     <div className="space-y-8">
@@ -86,7 +114,7 @@ export default async function AdminDashboard() {
       {/* Pedidos recientes — ancho completo */}
       <RecentOrdersWidget initialOrders={normalizedOrders} />
 
-      {/* Stock bajo — solo si hay productos con stock crítico */}
+      {/* Stock bajo */}
       {lowStock && lowStock.length > 0 && (
         <div className="bg-white border border-amber-200 rounded-2xl overflow-hidden shadow-card">
           <div className="flex items-center gap-2 px-5 py-4 border-b border-amber-100 bg-amber-50">
@@ -115,7 +143,6 @@ export default async function AdminDashboard() {
           </div>
         </div>
       )}
-
     </div>
   )
 }

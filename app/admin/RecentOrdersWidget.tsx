@@ -24,12 +24,6 @@ interface Order {
   order_items:   OrderItem[]
 }
 
-const FULL_SELECT = `
-  id, status, total, currency, display_total, created_at,
-  profiles(full_name, email),
-  order_items(quantity, unit_price, product:products(id, name, image_url))
-` as const
-
 export default function RecentOrdersWidget({ initialOrders }: { initialOrders: Order[] }) {
   const [orders,    setOrders]    = useState<Order[]>(initialOrders)
   const [connected, setConnected] = useState(false)
@@ -43,14 +37,48 @@ export default function RecentOrdersWidget({ initialOrders }: { initialOrders: O
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'orders' },
         async (payload) => {
-          const { data } = await supabase
-            .from('orders')
-            .select(FULL_SELECT)
-            .eq('id', (payload.new as { id: string }).id)
-            .single()
-          if (data) {
-            setOrders((prev) => [data as unknown as Order, ...prev].slice(0, 10))
+          const newId     = (payload.new as { id: string; user_id: string }).id
+          const newUserId = (payload.new as { id: string; user_id: string }).user_id
+
+          // Fetch order + profile + items in parallel (no join to avoid FK issues)
+          const [
+            { data: orderRow },
+            { data: profileRow },
+            { data: itemRows },
+          ] = await Promise.all([
+            supabase
+              .from('orders')
+              .select('id, status, total, currency, display_total, created_at, user_id')
+              .eq('id', newId)
+              .single(),
+            supabase
+              .from('profiles')
+              .select('id, full_name, email')
+              .eq('id', newUserId)
+              .single(),
+            supabase
+              .from('order_items')
+              .select('order_id, quantity, unit_price, product:products(id, name, image_url)')
+              .eq('order_id', newId),
+          ])
+
+          if (!orderRow) return
+
+          const newOrder: Order = {
+            id:            orderRow.id,
+            status:        orderRow.status,
+            total:         orderRow.total,
+            currency:      (orderRow as unknown as { currency: string | null }).currency ?? null,
+            display_total: (orderRow as unknown as { display_total: number | null }).display_total ?? null,
+            created_at:    orderRow.created_at,
+            profiles:      profileRow ?? null,
+            order_items:   (itemRows ?? []).map((i) => ({
+              quantity:   i.quantity,
+              unit_price: i.unit_price,
+              product:    (i.product as unknown as { id: string; name: string; image_url: string | null } | null),
+            })),
           }
+          setOrders((prev) => [newOrder, ...prev].slice(0, 10))
         },
       )
       .on(
