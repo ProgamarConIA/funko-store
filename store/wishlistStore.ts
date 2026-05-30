@@ -1,20 +1,12 @@
 import { create } from 'zustand'
 
 interface WishlistState {
-  /** Product IDs currently in the wishlist */
   ids:     string[]
-  /** True while the initial load from Supabase is in progress */
   loading: boolean
 
-  /** Load wishlist for the signed-in user (call on auth SIGNED_IN) */
   init:   () => Promise<void>
-  /** Clear local state (call on auth SIGNED_OUT) */
   clear:  () => void
-  /**
-   * Optimistically toggle a product.
-   * Returns 'auth_required' if the server returns 401.
-   */
-  toggle: (productId: string) => Promise<'added' | 'removed' | 'auth_required'>
+  toggle: (productId: string) => Promise<'added' | 'removed' | 'auth_required' | 'error'>
 
   has:   (productId: string) => boolean
   count: () => number
@@ -32,9 +24,12 @@ export const useWishlistStore = create<WishlistState>()((set, get) => ({
         const { data } = (await res.json()) as { data: string[] }
         set({ ids: data ?? [], loading: false })
       } else {
+        const body = await res.text()
+        console.error('[wishlist] init failed', res.status, body)
         set({ loading: false })
       }
-    } catch {
+    } catch (err) {
+      console.error('[wishlist] init error', err)
       set({ loading: false })
     }
   },
@@ -44,7 +39,7 @@ export const useWishlistStore = create<WishlistState>()((set, get) => ({
   toggle: async (productId: string) => {
     const inList = get().ids.includes(productId)
 
-    // ── Optimistic update ──────────────────────────────────────────────────
+    // Optimistic update
     set((s) =>
       inList
         ? { ids: s.ids.filter((id) => id !== productId) }
@@ -59,7 +54,7 @@ export const useWishlistStore = create<WishlistState>()((set, get) => ({
       })
 
       if (res.status === 401) {
-        // Revert — user not authenticated
+        // Revert — not authenticated
         set((s) =>
           inList
             ? { ids: [...s.ids, productId] }
@@ -69,20 +64,25 @@ export const useWishlistStore = create<WishlistState>()((set, get) => ({
       }
 
       if (!res.ok) {
-        // Revert on any other server error
+        const body = await res.text()
+        console.error('[wishlist] toggle failed', res.status, body)
+        // Revert
         set((s) =>
           inList
             ? { ids: [...s.ids, productId] }
             : { ids: s.ids.filter((id) => id !== productId) }
         )
+        return 'error'
       }
-    } catch {
-      // Revert on network error
+    } catch (err) {
+      console.error('[wishlist] toggle error', err)
+      // Revert
       set((s) =>
         inList
           ? { ids: [...s.ids, productId] }
           : { ids: s.ids.filter((id) => id !== productId) }
       )
+      return 'error'
     }
 
     return inList ? 'removed' : 'added'
