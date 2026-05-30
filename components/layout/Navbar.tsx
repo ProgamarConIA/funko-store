@@ -21,7 +21,7 @@ const NAV_LINKS = [
 export default function Navbar() {
   const toggleCart    = useCartStore((state) => state.toggleCart)
   const count         = useCartStore((state) => state.items.reduce((sum, i) => sum + i.quantity, 0))
-  const wishlistCount = useWishlistStore((s) => s.count())
+  const wishlistCount = useWishlistStore((s) => s.ids.length)
 
   const [user, setUser]         = useState<SupabaseUser | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
