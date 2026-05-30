@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
-import { ShoppingCart, User, Menu, X, LogOut } from 'lucide-react'
+import { ShoppingCart, User, Menu, X, LogOut, Heart } from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
+import { useWishlistStore } from '@/store/wishlistStore'
 import { createClient } from '@/lib/supabase/client'
 import CurrencySelector from '@/components/ui/CurrencySelector'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -18,10 +19,9 @@ const NAV_LINKS = [
 ]
 
 export default function Navbar() {
-  const toggleCart = useCartStore((state) => state.toggleCart)
-  const count = useCartStore(
-    (state) => state.items.reduce((sum, i) => sum + i.quantity, 0)
-  )
+  const toggleCart    = useCartStore((state) => state.toggleCart)
+  const count         = useCartStore((state) => state.items.reduce((sum, i) => sum + i.quantity, 0))
+  const wishlistCount = useWishlistStore((s) => s.count())
 
   const [user, setUser]         = useState<SupabaseUser | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -95,6 +95,20 @@ export default function Navbar() {
             {/* Selector de moneda */}
             <CurrencySelector />
 
+            {/* Wishlist */}
+            <Link
+              href="/wishlist"
+              className="relative p-2.5 rounded-xl text-[#0F0F14] hover:bg-gray-100"
+              aria-label="Mis favoritos"
+            >
+              <Heart className={`w-5 h-5 transition-colors ${wishlistCount > 0 ? 'fill-red-500 stroke-red-500' : ''}`} />
+              {wishlistCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 shadow-sm">
+                  {wishlistCount > 9 ? '9+' : wishlistCount}
+                </span>
+              )}
+            </Link>
+
             {/* Carrito */}
             <button
               onClick={toggleCart}
@@ -167,6 +181,19 @@ export default function Navbar() {
                     className="block px-4 py-2.5 text-sm text-[#1a1a1a] hover:text-[#0F0F14] hover:bg-gray-100 rounded-xl font-medium"
                   >
                     Mi perfil
+                  </Link>
+                  <Link
+                    href="/wishlist"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1a1a1a] hover:text-[#0F0F14] hover:bg-gray-100 rounded-xl font-medium"
+                  >
+                    <Heart className={`w-4 h-4 ${wishlistCount > 0 ? 'fill-red-500 stroke-red-500' : ''}`} />
+                    Mis favoritos
+                    {wishlistCount > 0 && (
+                      <span className="ml-auto text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full">
+                        {wishlistCount}
+                      </span>
+                    )}
                   </Link>
                   <button
                     onClick={handleLogout}

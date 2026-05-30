@@ -2,6 +2,7 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import CartDrawer from '@/components/cart/CartDrawer'
 import RealtimeProductSync from '@/components/providers/RealtimeProductSync'
+import WishlistSync from '@/components/providers/WishlistSync'
 
 /**
  * PublicLayout — aplica a TODAS las rutas del frontend público:
@@ -20,6 +21,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <Footer />
       <CartDrawer />
       <RealtimeProductSync />
+      <WishlistSync />
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { ShoppingCart, Check } from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
 import { DEFAULT_PRODUCT_IMAGE } from '@/lib/utils'
 import PriceDisplay from '@/components/ui/PriceDisplay'
+import WishlistButton from '@/components/products/WishlistButton'
 import type { Product } from '@/lib/types'
 import { useState } from 'react'
 
@@ -107,6 +108,12 @@ export default function ProductCard({ product }: ProductCardProps) {
             sizes="(max-width: 480px) 100vw, (max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             quality={90}
             onError={() => setImgError(true)}
+          />
+
+          {/* Wishlist heart — top-right, visible on hover or when active */}
+          <WishlistButton
+            productId={product.id}
+            className="absolute top-2.5 right-2.5 z-20"
           />
 
           {/* Badge */}
