@@ -5,9 +5,12 @@ import { createClient } from '@/lib/supabase/client'
 import { useWishlistStore } from '@/store/wishlistStore'
 
 /**
- * Null component — watches Supabase auth state and keeps the wishlist
- * Zustand store in sync (load on sign-in, clear on sign-out).
- * Place it once in the public layout.
+ * Null component — keeps the wishlist Zustand store in sync with auth state.
+ *
+ * Uses ONLY onAuthStateChange (not getSession + onAuthStateChange) to avoid
+ * the double-init race condition where both fire simultaneously on mount.
+ * Supabase fires INITIAL_SESSION immediately on subscription with the current
+ * session — no need for a separate getSession() call.
  */
 export default function WishlistSync() {
   const init  = useWishlistStore((s) => s.init)
@@ -16,14 +19,17 @@ export default function WishlistSync() {
   useEffect(() => {
     const supabase = createClient()
 
-    // Load immediately if already signed in
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) init()
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN')  init()
-      if (event === 'SIGNED_OUT') clear()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // INITIAL_SESSION fires immediately on subscribe with the current session.
+      // SIGNED_IN fires when the user actually logs in.
+      // Both mean "we have a user" — load the wishlist.
+      if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session?.user) {
+        console.log('[wishlist:sync] auth event:', event, '— loading wishlist')
+        init()
+      } else if (event === 'SIGNED_OUT') {
+        console.log('[wishlist:sync] signed out — clearing wishlist')
+        clear()
+      }
     })
 
     return () => subscription.unsubscribe()

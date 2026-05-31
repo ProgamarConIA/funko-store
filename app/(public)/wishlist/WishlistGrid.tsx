@@ -7,11 +7,11 @@ import { Heart } from 'lucide-react'
 import type { Product } from '@/lib/types'
 
 export default function WishlistGrid({ initialProducts }: { initialProducts: Product[] }) {
-  const has     = useWishlistStore((s) => s.has)
-  const loading = useWishlistStore((s) => s.loading)
+  const has         = useWishlistStore((s) => s.has)
+  const initializing = useWishlistStore((s) => s.initializing)
 
   // While store is loading, show all initial products (avoid flash of empty state)
-  const products = loading
+  const products = initializing
     ? initialProducts
     : initialProducts.filter((p) => has(p.id))
 

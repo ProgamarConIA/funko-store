@@ -13,9 +13,10 @@ interface Props {
 export default function WishlistButton({ productId, className = '' }: Props) {
   const router = useRouter()
 
-  const isWished = useWishlistStore((s) => s.ids.includes(productId))
-  const toggle   = useWishlistStore((s) => s.toggle)
-  const loading  = useWishlistStore((s) => s.loading)
+  // Subscribe to primitives so Zustand detects changes correctly
+  const isWished    = useWishlistStore((s) => s.ids.includes(productId))
+  const isToggling  = useWishlistStore((s) => s.toggling.includes(productId))
+  const toggle      = useWishlistStore((s) => s.toggle)
 
   const [animKey,  setAnimKey]  = useState(0)
   const [errShake, setErrShake] = useState(false)
@@ -23,7 +24,8 @@ export default function WishlistButton({ productId, className = '' }: Props) {
   const handleClick = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (loading) return
+    // Per-product lock: if THIS product is already toggling, ignore extra clicks
+    if (isToggling) return
 
     setAnimKey((k) => k + 1)
 
@@ -32,7 +34,6 @@ export default function WishlistButton({ productId, className = '' }: Props) {
     if (result === 'auth_required') {
       router.push('/auth/login?redirect=/wishlist')
     } else if (result === 'error') {
-      // Brief shake to signal the save failed
       setErrShake(true)
       setTimeout(() => setErrShake(false), 500)
     }
@@ -41,27 +42,34 @@ export default function WishlistButton({ productId, className = '' }: Props) {
   return (
     <button
       onClick={handleClick}
-      disabled={loading}
+      disabled={isToggling}
       aria-label={isWished ? 'Quitar de favoritos' : 'Agregar a favoritos'}
       className={[
         'flex items-center justify-center rounded-full w-8 h-8',
         'transition-all duration-200',
-        // Always visible — not hidden behind opacity-0
         isWished
-          ? 'bg-red-500 shadow-md shadow-red-500/30 scale-100'
+          ? 'bg-red-500 shadow-md shadow-red-500/30'
           : 'bg-white/70 backdrop-blur-sm shadow-sm',
         errShake ? 'animate-shake' : '',
+        isToggling ? 'opacity-70 cursor-wait' : '',
         className,
       ].join(' ')}
     >
-      <Heart
-        key={animKey}
-        className={[
-          'w-4 h-4',
-          isWished ? 'fill-white stroke-white' : 'stroke-[#9090aa]',
-          animKey > 0 ? 'animate-heart-pop' : '',
-        ].join(' ')}
-      />
+      {isToggling ? (
+        /* Spinner while this specific product is being saved */
+        <div className={`w-3.5 h-3.5 border-2 border-t-transparent rounded-full animate-spin ${
+          isWished ? 'border-white' : 'border-[#9090aa]'
+        }`} />
+      ) : (
+        <Heart
+          key={animKey}
+          className={[
+            'w-4 h-4',
+            isWished ? 'fill-white stroke-white' : 'stroke-[#9090aa]',
+            animKey > 0 ? 'animate-heart-pop' : '',
+          ].join(' ')}
+        />
+      )}
     </button>
   )
 }
