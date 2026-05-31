@@ -20,12 +20,12 @@ export default async function AdminProductsPage() {
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[#0F0F14]">Productos</h1>
           <p className="text-[#6B6B7B] text-sm mt-1">{total} productos en total</p>
         </div>
-        <div className="flex items-center gap-3 flex-wrap justify-end">
+        <div className="flex items-center gap-2 flex-wrap">
           {sinStock > 0 && (
             <span className="text-xs px-3 py-1.5 bg-red-50 text-red-500 border border-red-200 rounded-full font-semibold">
               {sinStock} sin stock

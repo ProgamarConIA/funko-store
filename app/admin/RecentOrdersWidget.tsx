@@ -140,10 +140,10 @@ export default function RecentOrdersWidget({ initialOrders }: { initialOrders: O
             const itemCount    = order.order_items.reduce((s, i) => s + i.quantity, 0)
 
             return (
-              <div key={order.id} className="px-6 py-4 hover:bg-[#FAFAFF] transition-colors">
+              <div key={order.id} className="px-4 sm:px-6 py-4 hover:bg-[#FAFAFF] transition-colors">
 
                 {/* ── Fila superior: usuario · ID · fecha · estado ─── */}
-                <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
 
                   {/* Usuario */}
                   <div className="flex items-center gap-2.5 min-w-0">
@@ -151,21 +151,21 @@ export default function RecentOrdersWidget({ initialOrders }: { initialOrders: O
                       {initial}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[#0F0F14] truncate max-w-[200px]">
+                      <p className="text-sm font-semibold text-[#0F0F14] truncate max-w-[140px] sm:max-w-[200px]">
                         {displayName}
                       </p>
                       {user?.full_name && displayEmail && (
-                        <p className="text-[11px] text-[#B0B0BE] truncate max-w-[200px]">{displayEmail}</p>
+                        <p className="text-[11px] text-[#B0B0BE] truncate max-w-[140px] sm:max-w-[200px]">{displayEmail}</p>
                       )}
                     </div>
                   </div>
 
                   {/* Meta: ID + fecha + estado */}
-                  <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+                  <div className="flex flex-wrap items-center gap-1.5">
                     <span className="text-[11px] font-mono font-semibold text-[#6B6B7B] bg-[#F5F5F7] px-2 py-0.5 rounded-lg">
                       #{order.id.slice(0, 8).toUpperCase()}
                     </span>
-                    <span className="text-[11px] text-[#B0B0BE] whitespace-nowrap">
+                    <span className="text-[10px] text-[#B0B0BE] hidden sm:inline whitespace-nowrap">
                       {formatDateTime(order.created_at)}
                     </span>
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${statusClass}`}>
@@ -174,8 +174,13 @@ export default function RecentOrdersWidget({ initialOrders }: { initialOrders: O
                   </div>
                 </div>
 
+                {/* Fecha en mobile (debajo de la fila superior) */}
+                <p className="text-[10px] text-[#B0B0BE] mb-2 sm:hidden">
+                  {formatDateTime(order.created_at)}
+                </p>
+
                 {/* ── Fila de productos + total ────────────────────── */}
-                <div className="flex items-end justify-between gap-4">
+                <div className="flex items-end justify-between gap-3">
 
                   {/* Miniaturas + lista */}
                   <div className="flex-1 min-w-0 space-y-1.5">
@@ -184,8 +189,7 @@ export default function RecentOrdersWidget({ initialOrders }: { initialOrders: O
                     ) : (
                       order.order_items.map((item, idx) => (
                         <div key={idx} className="flex items-center gap-2">
-                          {/* Miniatura */}
-                          <div className="w-8 h-8 bg-[#F5F4FF] rounded-lg overflow-hidden flex-shrink-0 border border-[#E4E4EC]">
+                          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#F5F4FF] rounded-lg overflow-hidden flex-shrink-0 border border-[#E4E4EC]">
                             <Image
                               src={item.product?.image_url || DEFAULT_PRODUCT_IMAGE}
                               alt={item.product?.name ?? 'Producto'}
@@ -194,7 +198,7 @@ export default function RecentOrdersWidget({ initialOrders }: { initialOrders: O
                               className="object-contain w-full h-full p-0.5"
                             />
                           </div>
-                          <p className="text-xs text-[#6B6B7B] truncate max-w-[260px]">
+                          <p className="text-xs text-[#6B6B7B] truncate max-w-[160px] sm:max-w-[260px]">
                             <span className="font-medium text-[#0F0F14]">
                               {item.product?.name ?? 'Producto eliminado'}
                             </span>
@@ -211,7 +215,7 @@ export default function RecentOrdersWidget({ initialOrders }: { initialOrders: O
 
                   {/* Total */}
                   <div className="text-right flex-shrink-0">
-                    <p className="text-lg font-extrabold text-[#0F0F14] leading-none">{amount}</p>
+                    <p className="text-base sm:text-lg font-extrabold text-[#0F0F14] leading-none">{amount}</p>
                   </div>
                 </div>
               </div>

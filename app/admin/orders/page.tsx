@@ -35,12 +35,12 @@ export default async function AdminOrdersPage() {
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[#0F0F14]">Pedidos</h1>
           <p className="text-[#6B6B7B] text-sm mt-1">{total} pedido{total !== 1 ? 's' : ''} en total</p>
         </div>
-        <div className="text-right">
+        <div className="text-right shrink-0">
           <p className="text-xs text-[#6B6B7B]">Ingresos confirmados (EUR)</p>
           <p className="text-lg font-bold text-[#5856D6]">
             {formatPrice(ingresos, 'EUR')}

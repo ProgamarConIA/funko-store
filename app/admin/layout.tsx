@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { LayoutDashboard, Package, ShoppingBag, Users, ArrowLeft, Shield } from 'lucide-react'
 import Navbar from '@/components/layout/Navbar'
+import AdminMobileNav from './AdminMobileNav'
 
 // El admin panel requiere autenticación → nunca pre-renderizar estáticamente
 export const dynamic = 'force-dynamic'
@@ -17,7 +18,6 @@ const NAV = [
 ]
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  // ── CAPA 2: Verificación server-side (doble check aunque el middleware ya filtró)
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -28,11 +28,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="flex min-h-screen bg-[#F5F4FF]">
 
-      {/* Navbar pública — z-50, fixed top-0, idéntica al frontend */}
+      {/* Navbar pública — z-50, fixed top-0 */}
       <Navbar />
 
-      {/* Sidebar — arranca en top-16 para no solaparse con la Navbar */}
-      <aside className="w-56 flex-shrink-0 bg-[#0F0F14] flex flex-col fixed top-16 left-0 h-[calc(100vh-4rem)] z-40">
+      {/* ── Sidebar — solo visible en md+ ─────────────────────────── */}
+      <aside className="hidden md:flex w-56 flex-shrink-0 bg-[#0F0F14] flex-col fixed top-16 left-0 h-[calc(100vh-4rem)] z-40">
 
         {/* Logo admin */}
         <div className="px-5 py-5 border-b border-white/10">
@@ -73,12 +73,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </aside>
 
-      {/* Contenido principal — ml-56 por el sidebar, pt-16 por la Navbar */}
-      <main className="flex-1 ml-56 pt-16 overflow-auto">
-        <div className="max-w-6xl mx-auto px-6 py-8">
+      {/* ── Contenido principal ───────────────────────────────────── */}
+      {/* md:ml-56 — deja espacio para el sidebar en desktop         */}
+      {/* pb-16 md:pb-0 — deja espacio para la bottom nav en mobile  */}
+      <main className="flex-1 md:ml-56 pt-16 pb-16 md:pb-0 overflow-auto min-w-0">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
           {children}
         </div>
       </main>
+
+      {/* ── Bottom nav móvil — solo visible en < md ───────────────── */}
+      <AdminMobileNav />
     </div>
   )
 }

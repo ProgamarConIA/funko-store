@@ -48,12 +48,12 @@ export default async function AdminUsersPage() {
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[#0F0F14]">Usuarios</h1>
           <p className="text-[#6B6B7B] text-sm mt-1">{total} usuarios registrados</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs px-3 py-1.5 bg-[#EEEDFF] text-[#5856D6] border border-[#C9C8FF] rounded-full font-semibold flex items-center gap-1.5">
             <Shield className="w-3 h-3" /> {admins} admin{admins !== 1 ? 's' : ''}
           </span>
