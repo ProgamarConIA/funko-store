@@ -1,10 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutDashboard, Package, ShoppingBag, Users, ArrowLeft, Shield, FlaskConical } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingBag, Users, ArrowLeft, Shield } from 'lucide-react'
 import Navbar from '@/components/layout/Navbar'
-import { isAdminPreviewMode } from '@/lib/preview'
-import { PreviewBanner } from '@/components/preview/PreviewBanner'
 
 // El admin panel requiere autenticación → nunca pre-renderizar estáticamente
 export const dynamic = 'force-dynamic'
@@ -16,7 +14,6 @@ const NAV = [
   { href: '/admin/products', label: 'Productos', icon: <Package className="w-4 h-4" /> },
   { href: '/admin/orders',   label: 'Pedidos',   icon: <ShoppingBag className="w-4 h-4" /> },
   { href: '/admin/users',    label: 'Usuarios',  icon: <Users className="w-4 h-4" /> },
-  { href: '/admin/preview',  label: 'Preview',   icon: <FlaskConical className="w-4 h-4" /> },
 ]
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -27,8 +24,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!user || !ADMIN_EMAIL || user.email !== ADMIN_EMAIL) {
     redirect('/')
   }
-
-  const isPreview = await isAdminPreviewMode()
 
   return (
     <div className="flex min-h-screen bg-[#F5F4FF]">
@@ -50,16 +45,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <p className="text-[10px] text-white/40 pl-9">FunkoStore</p>
         </div>
 
-        {/* Email admin + preview indicator */}
+        {/* Email admin */}
         <div className="px-5 py-3 border-b border-white/10">
           <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Sesión</p>
           <p className="text-xs text-white/60 truncate">{user.email}</p>
-          {isPreview && (
-            <div className="flex items-center gap-1 mt-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-[10px] text-amber-400 font-semibold">Preview activo</span>
-            </div>
-          )}
         </div>
 
         {/* Navegación */}
@@ -86,8 +75,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
       {/* Contenido principal — ml-56 por el sidebar, pt-16 por la Navbar */}
       <main className="flex-1 ml-56 pt-16 overflow-auto">
-        {/* Banner sticky de preview — debajo del Navbar fijo, encima del contenido */}
-        <PreviewBanner />
         <div className="max-w-6xl mx-auto px-6 py-8">
           {children}
         </div>

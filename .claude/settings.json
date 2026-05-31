@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('next:', p.dependencies?.next\\); console.log\\('scripts:', JSON.stringify\\(p.scripts,null,2\\)\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(git commit *)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} en %{time_total}s\" https://funko-store.vercel.app/)",
+      "Bash(grep -v \"^$\")",
+      "Bash(node scripts/download-character-placeholders.mjs)",
+      "WebSearch",
+      "WebFetch(domain:www.pngplay.com)",
+      "WebFetch(domain:www.stickpng.com)",
+      "WebFetch(domain:www.pngmart.com)",
+      "WebFetch(domain:pngfre.com)",
+      "WebFetch(domain:www.pngall.com)",
+      "WebFetch(domain:www.hiclipart.com)",
+      "WebFetch(domain:www.pngwing.com)",
+      "WebFetch(domain:www.pngegg.com)",
+      "WebFetch(domain:toppng.com)",
+      "WebFetch(domain:www.pngkey.com)",
+      "WebFetch(domain:www.nicepng.com)",
+      "WebFetch(domain:www.seekpng.com)",
+      "WebFetch(domain:www.pngitem.com)",
+      "WebFetch(domain:nicepng.com)",
+      "WebFetch(domain:www.kindpng.com)",
+      "Bash(curl -sI --connect-timeout 5 https://pngimg.com/)",
+      "Bash(curl -sI --connect-timeout 5 https://www.pngitem.com/)",
+      "Bash(curl -sI --connect-timeout 5 https://toppng.b-cdn.net/)",
+      "Bash(curl -v --connect-timeout 10 \"https://pngimg.com/uploads/batman/batman_PNG8.png\" -o /tmp/test.png)",
+      "Bash(powershell.exe -Command '[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $r = Invoke-WebRequest -Uri '\\\\''https://pngimg.com/uploads/batman/batman_PNG8.png'\\\\'' -OutFile '\\\\''C:/tmp/test_batman.png'\\\\'' -UserAgent '\\\\''Mozilla/5.0'\\\\'' -TimeoutSec 20; Write-Host $r.StatusCode')",
+      "Bash(bash -c ' *)",
+      "Bash(npm run *)",
+      "Bash(dir /s /b app\\\\*.tsx)",
+      "Bash(node -e \"const p = require\\('./node_modules/@supabase/supabase-js/package.json'\\); console.log\\(p.version\\)\")",
+      "Bash(node -e \"const p = require\\('./node_modules/@supabase/auth-js/package.json'\\); console.log\\(p.version\\)\")",
+      "Bash(node -e \"const {GoTrueAdminApi} = require\\('./node_modules/@supabase/auth-js/dist/main/lib/GoTrueAdminApi'\\); console.log\\(Object.getOwnPropertyNames\\(GoTrueAdminApi.prototype\\).filter\\(m => m.toLowerCase\\(\\).includes\\('user'\\)\\)\\)\")",
+      "Bash(node -e \"const m = require\\('./node_modules/@supabase/auth-js/dist/main/index.js'\\); const api = m.GoTrueAdminApi ? m.GoTrueAdminApi.prototype : null; if \\(api\\) console.log\\(Object.getOwnPropertyNames\\(api\\).filter\\(n => n.toLowerCase\\(\\).includes\\('user'\\)\\)\\) ; else console.log\\('not found'\\)\")",
+      "Bash(rm -f \"lib/preview.ts\" \"components/preview/PreviewBanner.tsx\" \"components/preview/PreviewFeature.tsx\" \"app/admin/preview/page.tsx\" \"app/admin/preview/actions.ts\")",
+      "Bash(rmdir \"components/preview\" \"app/admin/preview\")"
+    ]
+  }
+}
