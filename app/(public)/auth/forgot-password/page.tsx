@@ -67,10 +67,12 @@ export default function ForgotPasswordPage() {
       }
 
       if (!emailConfirmed) {
+        console.log('[forgot-password] blocked — no account for domain:', email.trim().split('@')[1])
         setError('No existe ninguna cuenta asociada a este email.')
         return
       }
 
+      console.log('[forgot-password] sending recovery for domain:', email.trim().split('@')[1])
       const { error: authError } = await supabase.auth.resetPasswordForEmail(
         email.trim().toLowerCase(),
         {
@@ -86,16 +88,19 @@ export default function ForgotPasswordPage() {
         if (isRateLimitError(authError.message)) {
           // Rate-limit = Supabase ya procesó un recovery request recientemente.
           // El email debería estar en camino. Mostrar pantalla de instrucciones.
+          console.log('[forgot-password] rate-limited — previous request still active for domain:', email.trim().split('@')[1])
           setPreviouslySent(true)
           setSent(true)
           setCooldown(60)
           return
         }
+        console.error('[forgot-password] resetPasswordForEmail error:', authError.message)
         setError('No se pudo procesar la solicitud. Intentá de nuevo.')
         return
       }
 
       // Supabase aceptó el request (no garantiza que el email haya llegado aún)
+      console.log('[forgot-password] recovery accepted by Supabase for domain:', email.trim().split('@')[1])
       setSent(true)
       setCooldown(60)
 

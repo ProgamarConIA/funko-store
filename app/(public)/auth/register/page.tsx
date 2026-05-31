@@ -157,6 +157,7 @@ export default function RegisterPage() {
       setLoadingMsg('Verificando email...')
       const emailCheck = await validateEmail(form.email)
       if (!emailCheck.valid) {
+        console.log('[register] email rejected by client validation:', emailCheck.error)
         setError(emailCheck.error ?? 'Email no válido.')
         setLoading(false)
         inFlight.current = false
@@ -165,6 +166,7 @@ export default function RegisterPage() {
       setLoadingMsg('Creando cuenta...')
 
       const normalizedEmail = form.email.trim().toLowerCase()
+      console.log('[register] signUp attempt for domain:', normalizedEmail.split('@')[1])
 
       const { data, error: authError } = await supabase.auth.signUp({
         email:    normalizedEmail,
@@ -179,34 +181,26 @@ export default function RegisterPage() {
       if (authError) {
         if (isRateLimitError(authError.message)) {
           // ─── Rate-limit en signUp ───────────────────────────────────────
-          // No asumimos automáticamente que hay un OTP pendiente para ESTE email.
-          // El rate-limit puede ser:
-          //   a) Email-específico: OTP ya enviado a este email → challenge activo
-          //   b) IP/global: ningún OTP fue enviado para este email
+          // Supabase email-rate-limit significa que ya envió un OTP a este email
+          // recientemente. Ir directo a la pantalla OTP sin llamar resend():
           //
-          // Para distinguir los casos, llamamos resend():
-          //   • Si resend() tiene éxito o rate-limita → challenge activo para este email
-          //   • Si resend() falla con otro error (ej: "user not found") → no hay challenge
-          setLoadingMsg('Verificando estado...')
-          const { error: resendErr } = await supabase.auth.resend({
-            type:  'signup',
-            email: normalizedEmail,
-            options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-          })
-
-          if (!resendErr || isRateLimitError(resendErr.message)) {
-            // ✅ resend confirmó que hay un challenge activo para este email
-            setPendingOtpEmail(normalizedEmail)
-            otpAttempts.current = 0
-            setOtpPreviouslySent(true)
-            setStep('otp')
-            setResendCooldown(60)
-          } else {
-            // ❌ resend falló con error distinto de rate-limit.
-            // Puede ser: usuario no existe (IP rate-limit en signUp) o error SMTP real.
-            // Usar translateSignUpError para dar el mensaje más preciso posible.
-            setError(translateSignUpError(resendErr.message))
-          }
+          //   ✅ Evita enviar un email adicional solo para "verificar" el challenge.
+          //      Llamar resend() aquí era la principal fuente de emails duplicados
+          //      reportados por Supabase (un email por signUp + otro por resend).
+          //
+          //   ✅ Si el rate-limit era IP/global (no email-specific), el usuario
+          //      verá la pantalla OTP pero no podrá verificar — la UI lo guía
+          //      a "← Usar otro email" para reiniciar el flujo.
+          //
+          //   ✅ Si el usuario sí recibió el OTP, puede ingresarlo de inmediato.
+          //      Si necesita un nuevo código, puede esperar el cooldown y presionar
+          //      "Reenviar código" manualmente (un solo envío explícito, no implícito).
+          console.log('[register] signUp rate-limited for domain:', normalizedEmail.split('@')[1], '— showing OTP screen without extra resend')
+          setPendingOtpEmail(normalizedEmail)
+          otpAttempts.current = 0
+          setOtpPreviouslySent(true)
+          setStep('otp')
+          setResendCooldown(60)
           setLoading(false)
           return
         }
@@ -240,6 +234,7 @@ export default function RegisterPage() {
 
       // ✅ OTP enviado: fijar el email del challenge ANTES de cambiar el step.
       // A partir de aquí, pendingOtpEmail es el único email válido para verifyOtp().
+      console.log('[register] OTP sent — domain:', normalizedEmail.split('@')[1])
       setPendingOtpEmail(normalizedEmail)
       otpAttempts.current = 0
       setOtpPreviouslySent(false)
@@ -347,6 +342,7 @@ export default function RegisterPage() {
     } else {
       // ✅ Nuevo código enviado: actualizar/confirmar el email del challenge
       // y resetear el contador de intentos (código nuevo = oportunidad nueva).
+      console.log('[register] OTP resent — domain:', emailToResend.split('@')[1])
       setPendingOtpEmail(emailToResend)
       otpAttempts.current = 0
       setOtpPreviouslySent(false)

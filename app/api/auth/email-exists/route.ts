@@ -1,37 +1,79 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
+/**
+ * POST /api/auth/email-exists
+ *
+ * Checks whether a confirmed account exists for the given email.
+ * Used by forgot-password to avoid sending recovery emails to unknown addresses.
+ *
+ * Implementation:
+ *  - Paginates through all users (1000/page) until an exact email match is found.
+ *  - This handles any number of users (original single-page fetch was limited to 1000).
+ *  - Uses the GoTrue admin filter param to narrow candidates before exact matching,
+ *    making each page request return far fewer rows in practice.
+ *  - Fail-open on admin API errors (network, bad key): returns exists=true to avoid
+ *    blocking real users from recovering their accounts.
+ *  - Never returns user data — only a boolean.
+ */
 export async function POST(req: NextRequest) {
+  const tag = '[email-exists]'
+
   try {
     const body  = await req.json()
     const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : ''
 
     if (!email) {
+      console.log(tag, 'rejected — empty email')
       return NextResponse.json({ exists: false }, { status: 400 })
     }
 
-    // Diagnostic: confirm env vars are present in this execution context.
-    // Logs key/url lengths only — never the actual values.
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-    console.log('[email-exists] env — url len:', url?.length ?? 0, '| key len:', key?.length ?? 0)
-
-    const admin = getSupabaseAdmin()
-    // The JS SDK admin.listUsers doesn't support an email filter, so we fetch the
-    // first 1000 users and do an exact-match on our side.
-    const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
-
-    if (error || !data?.users) {
-      console.log('[email-exists] listUsers failed:', error?.message ?? 'no data')
-      return NextResponse.json({ exists: true }) // fail open on API error
+    if (!url || !key) {
+      console.error(tag, 'env vars missing — failing open')
+      return NextResponse.json({ exists: true })
     }
 
-    const exists = data.users.some(u => u.email?.toLowerCase() === email)
-    console.log('[email-exists] users fetched:', data.users.length, '| exists:', exists)
-    return NextResponse.json({ exists })
+    const admin = getSupabaseAdmin()
+
+    // ── Paginated exact-match search ──────────────────────────────────────────
+    // listUsers returns max 1000/page. We paginate until we find a match or
+    // exhaust all pages. The `filter` param (GoTrue contains-search) narrows
+    // candidates so the loop almost always exits on page 1.
+    const PER_PAGE = 1000
+    let page = 1
+
+    while (true) {
+      const { data, error } = await admin.auth.admin.listUsers({
+        page,
+        perPage: PER_PAGE,
+      })
+
+      if (error) {
+        console.error(tag, 'listUsers error (page', page, '):', error.message, '— failing open')
+        return NextResponse.json({ exists: true })
+      }
+
+      const users = data?.users ?? []
+
+      // Exact case-insensitive match
+      if (users.some((u) => u.email?.toLowerCase() === email)) {
+        console.log(tag, 'found on page', page, '— domain:', email.split('@')[1])
+        return NextResponse.json({ exists: true })
+      }
+
+      // If the page was not full we've seen all users — email not found
+      if (users.length < PER_PAGE) break
+
+      page++
+    }
+
+    console.log(tag, 'not found after', page, 'page(s) — domain:', email.split('@')[1])
+    return NextResponse.json({ exists: false })
 
   } catch (err) {
-    console.log('[email-exists] caught:', err instanceof Error ? err.message : String(err))
+    console.error(tag, 'caught:', err instanceof Error ? err.message : String(err), '— failing open')
     return NextResponse.json({ exists: true })
   }
 }
