@@ -12,7 +12,7 @@ const SLIDES: SlideData[] = [
     badgeColor:   '#FF8090',
     badgeBorder:  'rgba(232,41,60,.40)',
     title:        'Colección Marvel',
-    subtitle:     'Iron Man, Spider-Man, Thor y los héroes más icónicos del universo Marvel.',
+    subtitle:     'Iron Man, Spider-Man, Wolverine y los héroes más icónicos del universo Marvel.',
     cta:          'Ver colección',
     href:         '/?franchise=Marvel',
     accent:       '#E8293C',
@@ -20,9 +20,13 @@ const SLIDES: SlideData[] = [
     bg:           'linear-gradient(135deg,#060000 0%,#1a0408 45%,#2a060f 75%,#0d0102 100%)',
     patternImage: 'radial-gradient(circle,rgba(232,41,60,.18) 1.5px,transparent 1.5px)',
     patternSize:  '28px 28px',
-    character:    '/characters/marvel/spider-man.png',
-    characterAlt: 'Spider-Man Funko Pop',
-    glowColor:    'rgba(232,41,60,.45)',
+    glowColor:    'rgba(232,41,60,.55)',
+    fadeTo:       '#0d0102',
+    characters: {
+      left:   { src: '/characters/marvel/iron-man.png',   alt: 'Iron Man',   emoji: '⚙️' },
+      center: { src: '/characters/marvel/spider-man.png', alt: 'Spider-Man', emoji: '🕷️' },
+      right:  { src: '/characters/marvel/wolverine.png',  alt: 'Wolverine',  emoji: '🦁' },
+    },
   },
   {
     id:           2,
@@ -31,7 +35,7 @@ const SLIDES: SlideData[] = [
     badgeColor:   '#72B8FF',
     badgeBorder:  'rgba(30,144,255,.35)',
     title:        'DC Universe',
-    subtitle:     'Batman, Superman y la Liga de la Justicia. Guardianes de Gotham y Metrópolis.',
+    subtitle:     'Batman, Superman y The Flash. Los guardianes de Gotham y Metrópolis.',
     cta:          'Explorar DC',
     href:         '/?franchise=DC',
     accent:       '#1E90FF',
@@ -39,9 +43,13 @@ const SLIDES: SlideData[] = [
     bg:           'linear-gradient(135deg,#000207 0%,#03091e 45%,#060f2b 75%,#010313 100%)',
     patternImage: 'linear-gradient(rgba(30,144,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(30,144,255,.08) 1px,transparent 1px)',
     patternSize:  '44px 44px',
-    character:    '/characters/dc/batman.png',
-    characterAlt: 'Batman Funko Pop',
-    glowColor:    'rgba(30,144,255,.45)',
+    glowColor:    'rgba(30,144,255,.55)',
+    fadeTo:       '#010313',
+    characters: {
+      left:   { src: '/characters/dc/batman.png',   alt: 'Batman',    emoji: '🦇' },
+      center: { src: '/characters/dc/superman.png', alt: 'Superman',  emoji: '🔵' },
+      right:  { src: '/characters/dc/flash.png',    alt: 'The Flash', emoji: '⚡' },
+    },
   },
   {
     id:           3,
@@ -50,7 +58,7 @@ const SLIDES: SlideData[] = [
     badgeColor:   '#FF9999',
     badgeBorder:  'rgba(255,107,107,.40)',
     title:        'Anime Collection',
-    subtitle:     'Dragon Ball, Naruto, One Piece y los guerreros más épicos del anime.',
+    subtitle:     'Dragon Ball, Naruto, One Piece. Los guerreros más épicos del anime.',
     cta:          'Ver Anime',
     href:         '/?franchise=Anime',
     accent:       '#FF6B6B',
@@ -58,9 +66,13 @@ const SLIDES: SlideData[] = [
     bg:           'linear-gradient(135deg,#080012 0%,#150325 45%,#220540 75%,#0c0218 100%)',
     patternImage: 'repeating-linear-gradient(-45deg,rgba(255,107,107,.07),rgba(255,107,107,.07) 1px,transparent 1px,transparent 18px)',
     patternSize:  'auto',
-    character:    '/characters/anime/goku.png',
-    characterAlt: 'Goku Funko Pop',
-    glowColor:    'rgba(255,107,107,.45)',
+    glowColor:    'rgba(255,107,107,.55)',
+    fadeTo:       '#0c0218',
+    characters: {
+      left:   { src: '/characters/anime/naruto.png', alt: 'Naruto', emoji: '🍥' },
+      center: { src: '/characters/anime/goku.png',   alt: 'Goku',   emoji: '🔥' },
+      right:  { src: '/characters/anime/luffy.png',  alt: 'Luffy',  emoji: '⚓' },
+    },
   },
   {
     id:           4,
@@ -69,7 +81,7 @@ const SLIDES: SlideData[] = [
     badgeColor:   '#88AAFF',
     badgeBorder:  'rgba(65,105,225,.35)',
     title:        'Star Wars',
-    subtitle:     'Que la Fuerza te acompañe. Jedi, Sith y toda la galaxia en tu colección.',
+    subtitle:     'Luke, Darth Vader y el Mandaloriano. Que la Fuerza te acompañe.',
     cta:          'Explorar',
     href:         '/?franchise=Star Wars',
     accent:       '#4169E1',
@@ -77,9 +89,13 @@ const SLIDES: SlideData[] = [
     bg:           'linear-gradient(135deg,#000103 0%,#020816 45%,#040e22 75%,#010206 100%)',
     patternImage: 'radial-gradient(circle,rgba(255,255,255,.25) 1px,transparent 1px),radial-gradient(circle,rgba(65,105,225,.20) 1.5px,transparent 1.5px)',
     patternSize:  '64px 64px',
-    character:    '/characters/star-wars/darth-vader.png',
-    characterAlt: 'Darth Vader Funko Pop',
-    glowColor:    'rgba(65,105,225,.45)',
+    glowColor:    'rgba(65,105,225,.55)',
+    fadeTo:       '#010206',
+    characters: {
+      left:   { src: '/characters/star-wars/luke.png',        alt: 'Luke Skywalker', emoji: '⚔️' },
+      center: { src: '/characters/star-wars/darth-vader.png', alt: 'Darth Vader',    emoji: '🔴' },
+      right:  { src: '/characters/star-wars/mandalorian.png', alt: 'Mandalorian',    emoji: '🪖' },
+    },
   },
   {
     id:           5,
@@ -88,7 +104,7 @@ const SLIDES: SlideData[] = [
     badgeColor:   '#DDBB55',
     badgeBorder:  'rgba(197,160,40,.35)',
     title:        'Harry Potter',
-    subtitle:     'Hogwarts siempre será tu hogar. Coleccioná la magia de la saga más legendaria.',
+    subtitle:     'Voldemort, Harry y Hermione. Hogwarts siempre será tu hogar.',
     cta:          'Ver Harry Potter',
     href:         '/?franchise=Harry Potter',
     accent:       '#C5A028',
@@ -96,18 +112,22 @@ const SLIDES: SlideData[] = [
     bg:           'linear-gradient(135deg,#030210 0%,#0b0520 45%,#160a30 75%,#07030e 100%)',
     patternImage: 'radial-gradient(ellipse,rgba(197,160,40,.18) 1.5px,transparent 1.5px)',
     patternSize:  '38px 38px',
-    character:    '/characters/hp/harry-potter.png',
-    characterAlt: 'Harry Potter Funko Pop',
-    glowColor:    'rgba(197,160,40,.45)',
+    glowColor:    'rgba(197,160,40,.55)',
+    fadeTo:       '#07030e',
+    characters: {
+      left:   { src: '/characters/hp/voldemort.png',    alt: 'Voldemort',    emoji: '💀' },
+      center: { src: '/characters/hp/harry-potter.png', alt: 'Harry Potter', emoji: '⚡' },
+      right:  { src: '/characters/hp/hermione.png',     alt: 'Hermione',     emoji: '📚' },
+    },
   },
   {
     id:           6,
-    badge:        '🎮 Ediciones Especiales',
+    badge:        '🎮 Gaming Legends',
     badgeBg:      'rgba(0,230,118,.12)',
     badgeColor:   '#66FFB3',
     badgeBorder:  'rgba(0,230,118,.28)',
     title:        'Ediciones Deluxe',
-    subtitle:     'Figuras premium para coleccionistas exigentes. Kratos, Master Chief y más.',
+    subtitle:     'Kratos, Master Chief y Mario. Figuras premium para coleccionistas exigentes.',
     cta:          'Ver Deluxe',
     href:         '/?category=Deluxe',
     accent:       '#00E676',
@@ -115,19 +135,23 @@ const SLIDES: SlideData[] = [
     bg:           'linear-gradient(135deg,#010101 0%,#03040f 45%,#050618 75%,#020208 100%)',
     patternImage: 'linear-gradient(rgba(0,230,118,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(0,230,118,.08) 1px,transparent 1px)',
     patternSize:  '22px 22px',
-    character:    '/characters/games/kratos.png',
-    characterAlt: 'Kratos Funko Pop',
-    glowColor:    'rgba(0,230,118,.40)',
+    glowColor:    'rgba(0,230,118,.50)',
+    fadeTo:       '#020208',
+    characters: {
+      left:   { src: '/characters/games/kratos.png',       alt: 'Kratos',       emoji: '🪓' },
+      center: { src: '/characters/games/master-chief.png', alt: 'Master Chief', emoji: '🪖' },
+      right:  { src: '/characters/games/mario.png',        alt: 'Mario',        emoji: '⭐' },
+    },
   },
 ]
 
 const AUTOPLAY_MS = 5000
 
 const arrowStyle: React.CSSProperties = {
-  background:    'rgba(0,0,0,.45)',
-  backdropFilter:'blur(8px)',
+  background:           'rgba(0,0,0,.45)',
+  backdropFilter:       'blur(8px)',
   WebkitBackdropFilter: 'blur(8px)',
-  border:        '1px solid rgba(255,255,255,.18)',
+  border:               '1px solid rgba(255,255,255,.18)',
 }
 
 export default function HeroCarousel() {
@@ -223,14 +247,14 @@ export default function HeroCarousel() {
       </div>
 
       {/* ── Barra de progreso ───────────────────────────────────── */}
-      <div
-        aria-hidden
-        className="absolute bottom-0 left-0 right-0 h-px z-20 bg-white/10"
-      >
+      <div aria-hidden className="absolute bottom-0 left-0 right-0 h-px z-20 bg-white/10">
         <div
           key={current}
           className="carousel-progress-bar"
-          style={{ animationDuration: `${AUTOPLAY_MS}ms`, animationPlayState: isPaused ? 'paused' : 'running' }}
+          style={{
+            animationDuration:  `${AUTOPLAY_MS}ms`,
+            animationPlayState: isPaused ? 'paused' : 'running',
+          }}
         />
       </div>
     </section>
