@@ -186,17 +186,20 @@ export default function CheckoutPage() {
 
           {/* Resumen */}
           <div className="lg:w-72">
-            <div className="sticky top-24 bg-white border border-[#E4E4EC] rounded-2xl p-5 space-y-4 shadow-card">
+            <div className="sticky top-24 bg-white border border-[#E4E4EC] rounded-2xl p-6 space-y-5 shadow-card">
               <h2 className="font-semibold text-[#0F0F14] text-sm">Resumen del pedido</h2>
-              <div className="space-y-3 max-h-64 overflow-y-auto">
+              <div
+                className="space-y-3.5 max-h-64 overflow-y-auto pr-3"
+                style={{ scrollbarGutter: 'stable' }}
+              >
                 {items.map(({ product, quantity }) => (
-                  <div key={product.id} className="flex gap-2.5 items-center">
+                  <div key={product.id} className="flex gap-3 items-center">
                     <div className="relative w-10 h-10 bg-[#F5F4FF] rounded-xl overflow-hidden flex-shrink-0">
                       <Image src={product.image_url || DEFAULT_PRODUCT_IMAGE} alt={product.name} fill className="object-contain p-1" sizes="40px" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-[#0F0F14] line-clamp-1">{product.name}</p>
-                      <p className="text-xs text-[#6B6B7B]">x{quantity}</p>
+                      <p className="text-xs text-[#6B6B7B] mt-0.5">x{quantity}</p>
                     </div>
                     <PriceDisplay
                       priceEUR={product.price * quantity}
@@ -205,14 +208,14 @@ export default function CheckoutPage() {
                   </div>
                 ))}
               </div>
-              <div className="border-t border-[#E4E4EC] pt-3 space-y-2 text-sm">
+              <div className="border-t border-[#E4E4EC] pt-4 space-y-2.5 text-sm">
                 <div className="flex justify-between text-[#6B6B7B]">
                   <span>Subtotal</span><PriceDisplay priceEUR={total} />
                 </div>
                 <div className="flex justify-between text-green-600 font-medium">
                   <span>Envío</span><span>Gratis</span>
                 </div>
-                <div className="flex justify-between font-bold text-[#0F0F14] text-base pt-1">
+                <div className="flex justify-between font-bold text-[#0F0F14] text-base pt-2">
                   <span>Total</span><PriceDisplay priceEUR={total} className="font-bold text-[#0F0F14] text-base" />
                 </div>
               </div>
