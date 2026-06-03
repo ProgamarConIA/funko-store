@@ -99,36 +99,36 @@ export default function CheckoutPage() {
           <p className="text-[#6B6B7B] text-sm mt-1">Completá tu pedido en pocos pasos</p>
         </div>
 
+        {/* Stepper — encima de ambas columnas para que los cards queden alineados */}
+        <div className="flex items-center gap-3 mb-6">
+          {[
+            { key: 'shipping', label: '1. Envío', icon: <MapPin className="w-3.5 h-3.5" /> },
+            { key: 'payment', label: '2. Pago',  icon: <CreditCard className="w-3.5 h-3.5" /> },
+          ].map(({ key, label, icon }) => (
+            <button
+              key={key}
+              onClick={() => key === 'payment' ? null : setStep('shipping')}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                step === key
+                  ? 'bg-[#0F0F14] text-white shadow-sm'
+                  : step === 'payment' && key === 'shipping'
+                  ? 'bg-green-50 text-green-600 border border-green-200'
+                  : 'bg-white text-[#6B6B7B] border border-[#E4E4EC]'
+              }`}
+            >
+              {step === 'payment' && key === 'shipping'
+                ? <CheckCircle className="w-3.5 h-3.5" />
+                : icon
+              }
+              {label}
+            </button>
+          ))}
+        </div>
+
         <div className="flex flex-col lg:flex-row gap-6">
 
           {/* Formulario */}
-          <div className="flex-1 space-y-4">
-
-            {/* Stepper */}
-            <div className="flex items-center gap-3 mb-6">
-              {[
-                { key: 'shipping', label: '1. Envío', icon: <MapPin className="w-3.5 h-3.5" /> },
-                { key: 'payment', label: '2. Pago',  icon: <CreditCard className="w-3.5 h-3.5" /> },
-              ].map(({ key, label, icon }) => (
-                <button
-                  key={key}
-                  onClick={() => key === 'payment' ? null : setStep('shipping')}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                    step === key
-                      ? 'bg-[#0F0F14] text-white shadow-sm'
-                      : step === 'payment' && key === 'shipping'
-                      ? 'bg-green-50 text-green-600 border border-green-200'
-                      : 'bg-white text-[#6B6B7B] border border-[#E4E4EC]'
-                  }`}
-                >
-                  {step === 'payment' && key === 'shipping'
-                    ? <CheckCircle className="w-3.5 h-3.5" />
-                    : icon
-                  }
-                  {label}
-                </button>
-              ))}
-            </div>
+          <div className="flex-1">
 
             {/* Paso 1: Envío */}
             {step === 'shipping' && (
@@ -185,7 +185,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* Resumen */}
-          <div className="lg:w-72 lg:mt-[78px]">
+          <div className="lg:w-72">
             <div className="sticky top-24 flex flex-col max-h-[480px] bg-white border border-[#E4E4EC] rounded-2xl p-6 shadow-card">
               <h2 className="font-semibold text-[#0F0F14] text-sm mb-5 flex-shrink-0">Resumen del pedido</h2>
               <div
