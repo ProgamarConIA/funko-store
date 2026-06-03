@@ -185,7 +185,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* Resumen */}
-          <div className="lg:w-72">
+          <div className="lg:w-72 lg:mt-[76px]">
             <div className="sticky top-24 flex flex-col max-h-[480px] bg-white border border-[#E4E4EC] rounded-2xl p-6 shadow-card">
               <h2 className="font-semibold text-[#0F0F14] text-sm mb-5 flex-shrink-0">Resumen del pedido</h2>
               <div
