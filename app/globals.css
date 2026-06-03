@@ -175,6 +175,17 @@ html, body {
 }
 .animate-shake { animation: shake 0.45s ease-in-out; }
 
+@keyframes carouselProgress {
+  from { width: 0% }
+  to   { width: 100% }
+}
+.carousel-progress-bar {
+  height: 100%;
+  background: rgba(255,255,255,.38);
+  width: 0%;
+  animation: carouselProgress linear forwards;
+}
+
 a, button {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
