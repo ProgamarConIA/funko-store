@@ -99,7 +99,7 @@ export default function CheckoutPage() {
           <p className="text-[#6B6B7B] text-sm mt-1">Completá tu pedido en pocos pasos</p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 lg:items-stretch">
+        <div className="flex flex-col lg:flex-row gap-6">
 
           {/* Formulario */}
           <div className="flex-1 space-y-4">
@@ -185,9 +185,9 @@ export default function CheckoutPage() {
           </div>
 
           {/* Resumen */}
-          <div className="lg:w-72 flex flex-col">
-            <div className="flex-1 flex flex-col bg-white border border-[#E4E4EC] rounded-2xl p-6 shadow-card">
-              <h2 className="font-semibold text-[#0F0F14] text-sm mb-5">Resumen del pedido</h2>
+          <div className="lg:w-72">
+            <div className="sticky top-24 flex flex-col max-h-[480px] bg-white border border-[#E4E4EC] rounded-2xl p-6 shadow-card">
+              <h2 className="font-semibold text-[#0F0F14] text-sm mb-5 flex-shrink-0">Resumen del pedido</h2>
               <div
                 className="flex-1 min-h-0 space-y-3.5 overflow-y-auto pr-3"
                 style={{ scrollbarGutter: 'stable' }}
@@ -208,7 +208,7 @@ export default function CheckoutPage() {
                   </div>
                 ))}
               </div>
-              <div className="mt-auto border-t border-[#E4E4EC] pt-4 space-y-2.5 text-sm">
+              <div className="flex-shrink-0 border-t border-[#E4E4EC] pt-4 mt-5 space-y-2.5 text-sm">
                 <div className="flex justify-between text-[#6B6B7B]">
                   <span>Subtotal</span><PriceDisplay priceEUR={total} />
                 </div>
