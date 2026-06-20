@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { formatPrice, formatDateTime, getOrderStatusColor, getOrderStatusLabel, DEFAULT_PRODUCT_IMAGE } from '@/lib/utils'
 import Link from 'next/link'
 import Image from 'next/image'
-import { TrendingUp, Wifi, ShoppingBag, User } from 'lucide-react'
+import { TrendingUp, Wifi, ShoppingBag, ChevronDown } from 'lucide-react'
 
 interface OrderItem {
   quantity:   number
@@ -27,6 +27,14 @@ interface Order {
 export default function RecentOrdersWidget({ initialOrders }: { initialOrders: Order[] }) {
   const [orders,    setOrders]    = useState<Order[]>(initialOrders)
   const [connected, setConnected] = useState(false)
+  const [expanded,  setExpanded]  = useState<Set<string>>(new Set())
+
+  const toggle = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) { next.delete(id) } else { next.add(id) }
+      return next
+    })
 
   useEffect(() => {
     const supabase = createClient()
@@ -128,7 +136,7 @@ export default function RecentOrdersWidget({ initialOrders }: { initialOrders: O
           <p className="text-xs text-[#B0B0BE]">Las compras de usuarios aparecerán aquí en tiempo real.</p>
         </div>
       ) : (
-        <div className="divide-y divide-[#F0F0F6]">
+        <div>
           {orders.map((order) => {
             const user         = order.profiles
             const displayName  = user?.full_name ?? user?.email ?? 'Usuario desconocido'
@@ -138,86 +146,130 @@ export default function RecentOrdersWidget({ initialOrders }: { initialOrders: O
             const statusClass  = getOrderStatusColor(order.status)
             const statusLabel  = getOrderStatusLabel(order.status)
             const itemCount    = order.order_items.reduce((s, i) => s + i.quantity, 0)
+            const isOpen       = expanded.has(order.id)
 
             return (
-              <div key={order.id} className="px-4 sm:px-6 py-4 hover:bg-[#FAFAFF] transition-colors">
+              <div key={order.id} className="border-b border-[#F0F0F6] last:border-0">
 
-                {/* ── Fila superior: usuario · ID · fecha · estado ─── */}
-                <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
+                {/* ── Fila resumen (siempre visible, clickable) ─── */}
+                <button
+                  onClick={() => toggle(order.id)}
+                  className="w-full text-left px-4 sm:px-6 py-4 hover:bg-[#FAFAFF] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#5856D6]"
+                  aria-expanded={isOpen}
+                >
+                  <div className="flex items-center gap-3">
 
-                  {/* Usuario */}
-                  <div className="flex items-center gap-2.5 min-w-0">
+                    {/* Avatar */}
                     <div className="w-8 h-8 rounded-full bg-[#EEEDFF] flex items-center justify-center text-xs font-bold text-[#5856D6] flex-shrink-0">
                       {initial}
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[#0F0F14] truncate max-w-[140px] sm:max-w-[200px]">
-                        {displayName}
+
+                    {/* Info central */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                        <p className="text-sm font-semibold text-[#0F0F14] truncate max-w-[140px] sm:max-w-[200px]">
+                          {displayName}
+                        </p>
+                        {user?.full_name && displayEmail && (
+                          <p className="text-[11px] text-[#B0B0BE] truncate max-w-[130px] sm:max-w-[180px] hidden sm:block">
+                            {displayEmail}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                        <span className="text-[11px] font-mono font-semibold text-[#6B6B7B] bg-[#F5F5F7] px-2 py-0.5 rounded-lg">
+                          #{order.id.slice(0, 8).toUpperCase()}
+                        </span>
+                        <span className="text-[10px] text-[#B0B0BE] whitespace-nowrap hidden sm:inline">
+                          {formatDateTime(order.created_at)}
+                        </span>
+                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${statusClass}`}>
+                          {statusLabel}
+                        </span>
+                        <span className="text-[11px] text-[#6B6B7B]">
+                          {itemCount} producto{itemCount !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-[#B0B0BE] mt-0.5 sm:hidden">
+                        {formatDateTime(order.created_at)}
                       </p>
-                      {user?.full_name && displayEmail && (
-                        <p className="text-[11px] text-[#B0B0BE] truncate max-w-[140px] sm:max-w-[200px]">{displayEmail}</p>
+                    </div>
+
+                    {/* Total + chevron */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <p className="text-base sm:text-lg font-extrabold text-[#0F0F14] leading-none">
+                        {amount}
+                      </p>
+                      <ChevronDown
+                        className={`w-4 h-4 text-[#B0B0BE] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                      />
+                    </div>
+
+                  </div>
+                </button>
+
+                {/* ── Detalle expandible ──────────────────────────── */}
+                <div
+                  className={`overflow-hidden transition-all duration-200 ease-in-out ${
+                    isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+                  }`}
+                >
+                  <div className="px-4 sm:px-6 pb-5 pt-1 bg-[#FAFAFF] border-t border-[#F0F0F6]">
+
+                    {/* Datos del cliente */}
+                    <div className="mb-3">
+                      <p className="text-[11px] font-semibold text-[#5856D6] uppercase tracking-wide mb-1">Cliente</p>
+                      <p className="text-sm font-medium text-[#0F0F14]">{displayName}</p>
+                      {displayEmail && (
+                        <p className="text-xs text-[#6B6B7B]">{displayEmail}</p>
                       )}
                     </div>
-                  </div>
 
-                  {/* Meta: ID + fecha + estado */}
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-[11px] font-mono font-semibold text-[#6B6B7B] bg-[#F5F5F7] px-2 py-0.5 rounded-lg">
-                      #{order.id.slice(0, 8).toUpperCase()}
-                    </span>
-                    <span className="text-[10px] text-[#B0B0BE] hidden sm:inline whitespace-nowrap">
-                      {formatDateTime(order.created_at)}
-                    </span>
-                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${statusClass}`}>
-                      {statusLabel}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Fecha en mobile (debajo de la fila superior) */}
-                <p className="text-[10px] text-[#B0B0BE] mb-2 sm:hidden">
-                  {formatDateTime(order.created_at)}
-                </p>
-
-                {/* ── Fila de productos + total ────────────────────── */}
-                <div className="flex items-end justify-between gap-3">
-
-                  {/* Miniaturas + lista */}
-                  <div className="flex-1 min-w-0 space-y-1.5">
+                    {/* Lista de productos */}
+                    <p className="text-[11px] font-semibold text-[#5856D6] uppercase tracking-wide mb-2">Productos</p>
                     {order.order_items.length === 0 ? (
                       <p className="text-xs text-[#B0B0BE] italic">Sin items registrados</p>
                     ) : (
-                      order.order_items.map((item, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#F5F4FF] rounded-lg overflow-hidden flex-shrink-0 border border-[#E4E4EC]">
-                            <Image
-                              src={item.product?.image_url || DEFAULT_PRODUCT_IMAGE}
-                              alt={item.product?.name ?? 'Producto'}
-                              width={32}
-                              height={32}
-                              className="object-contain w-full h-full p-0.5"
-                            />
-                          </div>
-                          <p className="text-xs text-[#6B6B7B] truncate max-w-[160px] sm:max-w-[260px]">
-                            <span className="font-medium text-[#0F0F14]">
-                              {item.product?.name ?? 'Producto eliminado'}
-                            </span>
-                            <span className="text-[#B0B0BE] ml-1">× {item.quantity}</span>
-                          </p>
-                        </div>
-                      ))
+                      <div className="space-y-2 mb-3">
+                        {order.order_items.map((item, idx) => {
+                          const subtotal = item.unit_price * item.quantity
+                          return (
+                            <div key={idx} className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-white rounded-lg overflow-hidden flex-shrink-0 border border-[#E4E4EC]">
+                                <Image
+                                  src={item.product?.image_url || DEFAULT_PRODUCT_IMAGE}
+                                  alt={item.product?.name ?? 'Producto'}
+                                  width={32}
+                                  height={32}
+                                  className="object-contain w-full h-full p-0.5"
+                                />
+                              </div>
+                              <p className="flex-1 text-xs text-[#0F0F14] font-medium truncate">
+                                {item.product?.name ?? 'Producto eliminado'}
+                              </p>
+                              <span className="text-[11px] text-[#6B6B7B] whitespace-nowrap">
+                                × {item.quantity}
+                              </span>
+                              <span className="text-[11px] font-semibold text-[#0F0F14] whitespace-nowrap w-16 text-right">
+                                {formatPrice(subtotal, order.currency ?? 'EUR')}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
                     )}
-                    <p className="text-[10px] text-[#B0B0BE] mt-1">
-                      <User className="w-3 h-3 inline mr-0.5" />
-                      {itemCount} producto{itemCount !== 1 ? 's' : ''} · {order.currency ?? 'EUR'}
-                    </p>
-                  </div>
 
-                  {/* Total */}
-                  <div className="text-right flex-shrink-0">
-                    <p className="text-base sm:text-lg font-extrabold text-[#0F0F14] leading-none">{amount}</p>
+                    {/* Total final */}
+                    <div className="flex items-center justify-between pt-3 border-t border-[#E4E4EC]">
+                      <span className="text-xs text-[#6B6B7B]">
+                        {itemCount} producto{itemCount !== 1 ? 's' : ''} · {order.currency ?? 'EUR'}
+                      </span>
+                      <span className="text-base font-extrabold text-[#0F0F14]">{amount}</span>
+                    </div>
+
                   </div>
                 </div>
+
               </div>
             )
           })}

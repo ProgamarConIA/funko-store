@@ -36,7 +36,9 @@
       "Bash(node -e \"const {GoTrueAdminApi} = require\\('./node_modules/@supabase/auth-js/dist/main/lib/GoTrueAdminApi'\\); console.log\\(Object.getOwnPropertyNames\\(GoTrueAdminApi.prototype\\).filter\\(m => m.toLowerCase\\(\\).includes\\('user'\\)\\)\\)\")",
       "Bash(node -e \"const m = require\\('./node_modules/@supabase/auth-js/dist/main/index.js'\\); const api = m.GoTrueAdminApi ? m.GoTrueAdminApi.prototype : null; if \\(api\\) console.log\\(Object.getOwnPropertyNames\\(api\\).filter\\(n => n.toLowerCase\\(\\).includes\\('user'\\)\\)\\) ; else console.log\\('not found'\\)\")",
       "Bash(rm -f \"lib/preview.ts\" \"components/preview/PreviewBanner.tsx\" \"components/preview/PreviewFeature.tsx\" \"app/admin/preview/page.tsx\" \"app/admin/preview/actions.ts\")",
-      "Bash(rmdir \"components/preview\" \"app/admin/preview\")"
+      "Bash(rmdir \"components/preview\" \"app/admin/preview\")",
+      "Bash(git checkout *)",
+      "Bash(git rm *)"
     ]
   }
 }
